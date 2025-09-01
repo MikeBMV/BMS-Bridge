@@ -171,7 +171,7 @@ def get_app() -> BMSBridgeApp:
 
 # --- 7. FastAPI App Creation and Endpoints ---
 
-app = FastAPI(title="BMS Bridge", version="3.1.0", lifespan=lifespan)
+app = FastAPI(title="BMS Bridge", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 @app.get("/api/health")
