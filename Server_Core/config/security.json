@@ -1,0 +1,10 @@
+{
+  "allowed_static_paths": [
+    "static",
+    "libs",
+    "images",
+    "procedure",
+    "Left",
+    "Right"
+  ]
+}

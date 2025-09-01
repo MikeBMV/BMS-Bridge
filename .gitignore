@@ -1,0 +1,39 @@
+# C# / Visual Studio / Build output
+[Bb]in/
+[Oo]bj/
+.vs/
+[Rr]elease/
+*.user
+*.suo
+*.sln.docstates
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+build/
+dist/
+*.spec
+!Server_Core/BMS_Bridge_Server.spec
+.venv/
+venv/
+env/
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# General Logs
+*.log
+
+# Generated kneeboard images
+Server_Core/Left/
+Server_Core/Right/
+
+# User-provided PDF files inside 'procedure' folder
+Server_Core/procedure/*.pdf
+!Server_Core/procedure/.gitkeep
+
+# Personal / Temporary Folders
+1/

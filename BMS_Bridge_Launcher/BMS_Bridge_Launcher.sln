@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BMS_Bridge_Launcher", "BMS_Bridge_Launcher.csproj", "{1BD1BC0B-FB75-454B-9CA4-E27FFA00F4DD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server_Core", "Server_Core", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		..\Server_Core\bms_bridge.log = ..\Server_Core\bms_bridge.log
+		..\Server_Core\BMS_Bridge_Server.spec = ..\Server_Core\BMS_Bridge_Server.spec
+		..\Server_Core\falcon_memreader.py = ..\Server_Core\falcon_memreader.py
+		..\Server_Core\main.py = ..\Server_Core\main.py
+		..\Server_Core\start_server.bat = ..\Server_Core\start_server.bat
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1BD1BC0B-FB75-454B-9CA4-E27FFA00F4DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BD1BC0B-FB75-454B-9CA4-E27FFA00F4DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BD1BC0B-FB75-454B-9CA4-E27FFA00F4DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BD1BC0B-FB75-454B-9CA4-E27FFA00F4DD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E6FE03B1-276E-4829-87C7-2150E7E14EEE}
+	EndGlobalSection
+EndGlobal

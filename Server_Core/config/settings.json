@@ -1,0 +1,16 @@
+{
+  "server_host": "0.0.0.0",
+  "server_port": 8000,
+  "allowed_image_extensions": [
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp"
+  ],
+  "websocket_update_interval": 0.1,
+  "kneeboard_scale_width": 1.4,
+  "max_websocket_connections": 10,
+  "circuit_breaker_failure_threshold": 5,
+  "circuit_breaker_reset_timeout": 60,
+  "file_cache_ttl_seconds": 300
+}

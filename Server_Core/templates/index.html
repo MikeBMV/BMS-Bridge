@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BMS Bridge v3.1</title>
+    <link rel="icon" href="/static/images/favicon.ico" sizes="any">
+    <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="app-header">
+        <h1 class="app-title">BMS Bridge</h1>
+        <span class="app-version">Version 3.1.0</span>
+    </header>
+    
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loading-message">Loading...</p>
+        </div>
+    </div>
+
+    <div id="error-notification" class="error-notification hidden">
+        <div class="error-content">
+            <span class="error-icon">⚠️</span>
+            <span id="error-message"></span>
+            <button onclick="app.hideError()" class="close-error">&times;</button>
+        </div>
+    </div>
+
+    <div id="connection-status" class="connection-status">
+        <span id="connection-indicator" class="status-indicator disconnected"></span>
+        <span id="connection-text">Checking...</span>
+    </div>
+
+    <main id="content-container" class="content-container">
+        <div class="welcome-screen">
+            <h1>BMS Bridge</h1>
+            <p>Professional BMS companion application</p>
+            <div class="version-info">Version 3.1.0</div>
+        </div>
+    </main>
+
+    <nav class="tab-navigation">
+        <button class="tab-button active" data-tab="left-kneeboard"><span class="tab-icon">📋</span><span class="tab-label">Left KB</span></button>
+        <button class="tab-button" data-tab="briefing"><span class="tab-icon">📄</span><span class="tab-label">Briefing</span></button>
+        <button class="tab-button" data-tab="instruments"><span class="tab-icon">🎯</span><span class="tab-label">Data</span></button>
+        <button class="tab-button" data-tab="procedure"><span class="tab-icon">📚</span><span class="tab-label">Docs</span></button>
+        <button class="tab-button" data-tab="right-kneeboard"><span class="tab-icon">📋</span><span class="tab-label">Right KB</span></button>
+    </nav>
+    
+    <!-- Using type="module" allows us to use import/export syntax inside app.js if needed in the future -->
+    <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

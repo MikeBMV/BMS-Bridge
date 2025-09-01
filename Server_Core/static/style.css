@@ -1,0 +1,545 @@
+/* File: static/style.css */
+
+/* ==========================================================================
+   1. CSS RESET & BASE STYLES
+   ========================================================================== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    /* Color Scheme */
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --background-color: #f8fafc;
+    --surface-color: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+
+    /* Shadows and Radii */
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --radius-md: 0.5rem;
+
+    /* Animations */
+    --transition-fast: 150ms ease-in-out;
+    --transition-normal: 250ms ease-in-out;
+}
+
+html,
+body {
+    height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   2. LAYOUT & CORE COMPONENTS
+   ========================================================================== */
+.app-header {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1001; /* Должен быть выше навигации, но ниже оверлеев */
+    background-color: rgba(255, 255, 255, 0.8); /* Полупрозрачный фон */
+    backdrop-filter: blur(4px); /* Эффект размытия для современных браузеров */
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: baseline; /* Выравнивание по базовой линии текста */
+    gap: 0.75rem;
+}
+
+.app-title {
+    font-size: 1.2rem; /* Размер как у <h1> */
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.app-version {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.content-container {
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    background-color: var(--surface-color);
+    overflow: hidden;
+   
+}
+
+.tab-navigation {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background-color: var(--surface-color);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    box-shadow: 0 -4px 6px -1px rgb(0 0 0 / 0.1);
+    z-index: 1000;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.tab-button:hover {
+    background-color: #f1f5f9;
+    color: var(--text-primary);
+}
+
+.tab-button.active {
+    color: var(--primary-color);
+    background-color: #eff6ff;
+}
+
+.tab-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.tab-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   3. UI FEEDBACK (LOADING, ERRORS, STATUS)
+   ========================================================================== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity var(--transition-normal);
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-content {
+    background-color: var(--surface-color);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.error-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 9998;
+    max-width: 90%;
+    animation: slideDown 0.3s ease;
+}
+
+.error-notification.hidden {
+    display: none;
+}
+
+.error-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.close-error {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+.connection-status {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--surface-color);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    font-size: 0.875rem;
+    z-index: 1000;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-indicator.connected {
+    background-color: var(--success-color);
+}
+
+.status-indicator.disconnected {
+    background-color: var(--error-color);
+}
+
+/* ==========================================================================
+   4. VIEWERS (KNEABOARD, PDF, BRIEFING, INSTRUMENTS)
+   ========================================================================== */
+.welcome-screen,
+.empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+/* --- SHARED VIEWER STYLES --- */
+.image-viewer,
+.pdf-viewer,
+.briefing-viewer,
+.instruments-viewer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.viewer-controls {
+    background-color: #f8fafc;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.control-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color var(--transition-fast);
+}
+.control-btn:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+}
+.control-btn:disabled {
+    background-color: var(--text-secondary);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.page-info {
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 80px;
+    text-align: center;
+}
+
+.viewer-content {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    padding: 1rem;
+    min-height: 0;
+    background-color: #f1f5f9;
+}
+
+#current-image,
+#pdf-canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    background-color: white;
+}
+
+/* --- BRIEFING STYLES --- */
+.briefing-tabs {
+    display: flex;
+    background-color: #f8fafc;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.briefing-tab {
+    background: none;
+    border: none;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition-fast);
+}
+.briefing-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background-color: white;
+}
+
+.briefing-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.briefing-panel { display: none; }
+.briefing-panel.active { display: block; }
+.text-content { line-height: 1.6; }
+.key-value-content { list-style: none; }
+.kv-item { padding: 0.75rem; background-color: #f8fafc; border-radius: var(--radius-md); border-left: 4px solid var(--primary-color); margin-bottom: 0.5rem; }
+.table-container { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.data-table th, .data-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+.data-table th { background-color: #f8fafc; font-weight: 600; }
+
+/* --- INSTRUMENTS STYLES --- */
+.instruments-grid {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0.75rem;
+    align-content: start;
+}
+
+.data-field {
+    background-color: #1f2937;
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.field-name {
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.field-value {
+    color: #60a5fa;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-weight: 600;
+    text-align: right;
+}
+
+/* --- SIMPLE CONTENT --- */
+.simple-content {
+    padding: 30px;
+    overflow-y: auto;
+    height: 100%;
+}
+
+/* ==========================================================================
+   5. BRIEFING VIEWER STYLES (v3 - Structured Data)
+   ========================================================================== */
+
+#briefing-content-wrapper {
+    padding: 1.5rem;
+    background-color: #f1f5f9; /* Light background */
+    overflow-y: auto;
+    height: 100%;
+}
+
+.briefing-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.briefing-section {
+    background-color: var(--surface-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2rem;
+    overflow: hidden; /* This prevents the table-container from overflowing the rounded corners */
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 0.75rem 1.5rem;
+    background-color: #f8fafc;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sub-section {
+    margin: 1rem 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border-color);
+}
+.sub-section:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+.sub-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.bms-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+.bms-table th, .bms-table td {
+    padding: 0.75rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+.bms-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.bms-table th {
+    background-color: #f8fafc;
+    font-weight: 600;
+}
+.bms-table tbody tr:hover {
+    background-color: #eff6ff;
+}
+
+.kv-list {
+    list-style: none;
+    padding: 1rem 1.5rem;
+}
+.kv-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+.kv-list li:last-child {
+    border-bottom: none;
+}
+.kv-list li strong {
+    color: var(--text-secondary);
+    padding-right: 2rem;
+}
+.kv-list li span {
+    text-align: right;
+}
+
+.text-content {
+    padding: 1.5rem;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+/* ==========================================================================
+   6. SPECIFIC TABLE STYLES
+   ========================================================================== */
+
+/* General styles for tables to prevent text wrapping */
+.bms-table td, .bms-table th {
+    white-space: nowrap;
+}
+
+/* Styles for the Steerpoints table */
+.steerpoints-table {
+    table-layout: fixed; /* Very important for controlling width */
+    width: 100%;
+}
+
+.steerpoints-table th:nth-of-type(1), .steerpoints-table td:nth-of-type(1) { width: 4%; }  /* # */
+.steerpoints-table th:nth-of-type(2), .steerpoints-table td:nth-of-type(2) { width: 12%; } /* Desc */
+.steerpoints-table th:nth-of-type(3), .steerpoints-table td:nth-of-type(3) { width: 10%; } /* Time */
+.steerpoints-table th:nth-of-type(4), .steerpoints-table td:nth-of-type(4) { width: 7%; }  /* Dist */
+.steerpoints-table th:nth-of-type(5), .steerpoints-table td:nth-of-type(5) { width: 7%; }  /* Head */
+.steerpoints-table th:nth-of-type(6), .steerpoints-table td:nth-of-type(6) { width: 7%; }  /* Cas */
+.steerpoints-table th:nth-of-type(7), .steerpoints-table td:nth-of-type(7) { width: 8%; }  /* Alt */
+.steerpoints-table th:nth-of-type(8), .steerpoints-table td:nth-of-type(8) { width: 15%; white-space: normal; } /* Action - allow wrapping */
+.steerpoints-table th:nth-of-type(9), .steerpoints-table td:nth-of-type(9) { width: 8%; }  /* Form */
+.steerpoints-table th:nth-of-type(10),.steerpoints-table td:nth-of-type(10){ width: 22%; white-space: normal; } /* Comments - allow wrapping */
