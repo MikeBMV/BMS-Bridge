@@ -54,3 +54,35 @@ The critical review has been extremely useful. It has confirmed our concerns abo
 We accept the criticism and agree that the **task of moving all settings to `settings.json`** must become **Priority #1**, to be completed before the implementation of Kneeboard Management. We also commit to paying heightened attention to security when working with user files.
 
 At the same time, we believe that the current architecture, despite its dependency on Shared Memory, is the most optimal for this project. Issues like advanced security and log management can be deferred to later stages, given the specific use case of the application.
+
+# Developer Response to Expert Audits
+
+**Objective:** To analyze and synthesize the feedback received from the AI experts (Grok, Claude 3, ChatGPT) and to form a unified action plan.
+
+## General Conclusions
+
+All audits provided extremely valuable and high-quality feedback. Grok was more pedantic about code details and "smells," while Claude focused on high-level architectural patterns and abstractions, and ChatGPT provided practical, common-sense recommendations. Their opinions do not contradict but rather complement each other, giving us a complete picture for improving the project.
+
+## Key Issues Confirmed by All Experts
+
+The following points were highlighted as critical in all reviews, making them our highest priorities:
+
+1.  **Hardcoded Values:** Unanimously identified as problem #1.
+2.  **Lack of Tests:** All experts emphasized the need for tests, especially for the `BriefingParser`.
+3.  **Problem with `taskkill /IM`:** All called this method unreliable and suggested more precise alternatives.
+4.  **Refactoring `Form1.cs`:** All pointed out the violation of the Single Responsibility Principle.
+5.  **File Access Security:** All warned about the Path Traversal vulnerability in the future Kneeboard Management feature.
+
+## Synthesized Action Plan
+
+Based on all recommendations, the following final plan has been formed, taking the best ideas from each report:
+
+1.  **Fix Security Immediately:** The Path Traversal vulnerability in `serve_static_or_app` will be fixed using the `.resolve()` method, as suggested by Claude.
+2.  **Introduce a Data Abstraction Layer:** The `BMSDataSource` interface, as proposed by Claude, will be implemented. This will fundamentally improve testability and isolate platform-dependent code.
+3.  **Implement Reliable Process Management:** The mechanism of using a **PID file** will be implemented, as suggested by all experts. This is more reliable than `taskkill /IM`.
+4.  **Externalize All Configuration:** All "magic numbers" will be moved to `settings.json`.
+5.  **Begin Refactoring the Launcher:** The server management logic will be extracted from `Form1.cs` into a separate `ServerManager` class.
+6.  **Improve Caching:** An MD5 hash check of file contents will be added, as suggested by Grok.
+7.  **Start Writing Tests:** After implementing the abstraction layer, we will begin writing `pytest` tests using a `MockBMSDataSource`.
+
+Other remarks (regarding security, scalability, and performance that are excessive for our context) are noted and will be added to the long-term development roadmap.

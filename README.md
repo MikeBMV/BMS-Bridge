@@ -4,5 +4,6 @@
   <hr>
   <h2>This project is currently under heavy development.</h2>
   <h3>User documentation will be available here upon the first official release.</h3>
+  <p><em>This project was created using a "vibe coding" methodology in close collaboration with Google AI Studio.</em></p>
   <p><em>For developer documentation, please see the <code>/docs</code> folder.</em></p>
 </div>
