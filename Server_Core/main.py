@@ -16,8 +16,38 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
+import argparse
+import platform
+import ctypes
+
 import socket
 from enum import Enum
+
+# --- 0. Command-line argument parsing for hiding the console ---
+# This must be done before any other code runs.
+def hide_console_window_if_requested():
+    """Checks for a command-line flag and hides the console if it's present."""
+    # We use argparse, which is the standard library for this.
+    # It will be extended with more options in the future.
+    parser = argparse.ArgumentParser(description="BMS Bridge Server")
+    parser.add_argument(
+        '--hide-console',
+        action='store_true',
+        help='If specified, the console window will be hidden on startup.'
+    )
+    # We parse only the known arguments, allowing others to be processed later if needed.
+    args, _ = parser.parse_known_args()
+
+    if args.hide_console and platform.system() == "Windows":
+        try:
+            # This is the standard Windows API call to hide a window.
+            # 0 = SW_HIDE
+            ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+        except Exception as e:
+            # If something goes wrong, we log it, but don't crash the server.
+            logger.error("Failed to hide console window", error=str(e))
+
+hide_console_window_if_requested()
 
 class ServerStatus(str, Enum):
     RUNNING = "RUNNING"
@@ -39,6 +69,8 @@ def get_server_ip() -> str:
         return ip
     except Exception:
         return "127.0.0.1"
+
+
 
 # --- 1. Configure logging using structlog ---
 structlog.configure(

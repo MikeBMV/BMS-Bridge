@@ -50,7 +50,8 @@ namespace BMS_Bridge_Launcher
                         UseShellExecute = true,
                         RedirectStandardOutput = false,
                         RedirectStandardError = false,
-                        CreateNoWindow = true
+                        CreateNoWindow = true,
+                        Arguments = "--hide-console"
                     },
                     EnableRaisingEvents = true
                 };
