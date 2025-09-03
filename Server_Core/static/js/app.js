@@ -82,10 +82,10 @@ class BMSBridgeApp {
                         this.loadKneeboard('Right', button);
                         break;
                     case 'briefing':
-                        this.loadBriefing(button);
+                        this.loadUnderConstruction('Briefing', button);
                         break;
-                    case 'instruments':
-                        this.loadInstruments(button);
+                    case 'charts':
+                        this.loadUnderConstruction('Charts', button);
                         break;
                     case 'procedure':
                         this.loadPdf('procedure', button);
@@ -185,25 +185,15 @@ class BMSBridgeApp {
         }
     }
 
-    async loadBriefing(element) {
+    loadUnderConstruction(pageTitle, element) {
         this.cleanupCurrentView();
         this.setActiveTab(element);
-        this.showLoading('Loading briefing...');
-        try {
-            const response = await fetch('/api/briefing');
-            const result = await response.json();
-            if (!result.success) throw new Error(result.error);
-            const pages = result.data.pages;
-            if (!pages || pages.length === 0) {
-                this.elements.contentContainer.innerHTML = `<div class="empty-content"><h2>Briefing is empty</h2></div>`;
-                return;
-            }
-            this._setupBriefingViewer(pages);
-        } catch (error) {
-            this.showError(`Failed to load briefing: ${error.message}`);
-        } finally {
-            this.hideLoading();
-        }
+        this.elements.contentContainer.innerHTML = `
+            <div class="empty-content">
+                <h1 style="font-size: 3rem; margin-bottom: 1rem;">🚧</h1>
+                <h2>${pageTitle} - Under Construction</h2>
+                <p style="margin-top: 0.5rem; color: var(--text-secondary);">This feature is coming soon!</p>
+            </div>`;
     }
 
     async loadPdf(pageName, element) {
@@ -222,14 +212,6 @@ class BMSBridgeApp {
         }
     }
     
-    async loadInstruments(element) {
-        this.cleanupCurrentView();
-        this.setActiveTab(element);
-        this.showLoading('Connecting to BMS...');
-        this.elements.contentContainer.innerHTML = `<div class="instruments-viewer"><div id="instruments-grid" class="instruments-grid"></div></div>`;
-        this._setupWebSocket();
-    }
-
     _setupImageViewer(name, images) {
         let pageNum = this.state.lastViewedPages[name] || 1;
         if (pageNum > images.length) pageNum = 1;
