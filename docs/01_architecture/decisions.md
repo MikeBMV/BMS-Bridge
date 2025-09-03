@@ -55,3 +55,37 @@ To use **targeted process termination via its Process ID (PID)**, which is store
 *   **Problem with `Kill()` and PyInstaller:** It was discovered that PyInstaller creates a process tree. `Process.Kill()` only terminated the parent bootstrapper, leaving the actual server running.
 *   **Problem with `taskkill /IM`:** Expert reviews correctly identified this method as "brittle," as it could accidentally terminate an unrelated process with the same name.
 *   **Final Solution:** The launcher saves the server's PID to `server.pid` upon launch. To stop, it reads the PID from this file and terminates that **specific** process. This is the most precise, reliable, and professional method.
+
+---
+
+### ADR-004: Refactoring the C# Launcher to Follow SRP
+
+**Context:**
+Expert reviews (Grok, ChatGPT, Claude) unanimously pointed out that the `Form1.cs` class was a "God Class" that violated the Single Responsibility Principle (SRP) by mixing UI, process management, and API polling logic.
+
+**Decision:**
+The C# launcher was refactored into a cleaner, multi-class architecture.
+
+**Rationale:**
+*   **SRP Adherence:** The new architecture separates concerns into distinct classes:
+    *   `ServerManager`: Handles all process lifecycle and log monitoring.
+    *   `HealthMonitor`: Handles all API polling.
+    *   `UIController`: Handles all UI updates.
+    *   `Form1`: Acts as a coordinator, wiring the components together.
+*   **Testability:** Each component can now be tested in isolation.
+*   **Maintainability:** Changes to one area of responsibility (e.g., how the server is stopped) are now confined to a single class, making the code easier to understand and modify.
+
+---
+
+### ADR-005: Server Launch Method - Independent Process with PID File
+
+**Context:**
+The previous method of launching the server as an independent process and stopping it via `taskkill /IM` was functional but identified as "brittle" by experts. A more precise control mechanism was needed.
+
+**Decision:**
+The `ServerManager` will launch the server as an independent process and immediately save its Process ID (PID) to a `server.pid` file. To stop the server, the manager will read the PID from this file and terminate that specific process and its children.
+
+**Rationale:**
+*   **Precision:** Terminating by PID is an exact operation that eliminates the risk of killing an unrelated process that happens to have the same name, which was the main critique of the `taskkill /IM` method.
+*   **Robustness:** This approach combines the resilience of running an independent server process with the precise control of direct process management.
+*   **State Management:** The `server.pid` file acts as a simple but effective state mechanism, allowing the launcher (or other tools) to know the PID of the running server instance.

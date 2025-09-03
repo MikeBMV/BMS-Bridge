@@ -15,9 +15,23 @@ namespace BMS_Bridge_Launcher
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                // Сначала освобождаем наши новые ресурсы
+                if (serverManager != null)
+                {
+                    serverManager.Dispose();
+                }
+                if (healthMonitor != null)
+                {
+                    healthMonitor.Dispose();
+                }
+
+                // Затем освобождаем ресурсы дизайнера, если они есть
+                if (components != null)
+                {
+                    components.Dispose();
+                }
             }
             base.Dispose(disposing);
         }
@@ -335,20 +349,20 @@ namespace BMS_Bridge_Launcher
         private System.Windows.Forms.Panel pnlHeader;
         private System.Windows.Forms.TableLayoutPanel tlpHeader;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private System.Windows.Forms.Label lblStatusIndicatorServer;
-        private System.Windows.Forms.Label lblStatusTextServer;
+        public System.Windows.Forms.Label lblStatusIndicatorServer;
+        public System.Windows.Forms.Label lblStatusTextServer;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
-        private System.Windows.Forms.Label lblStatusIndicatorBms;
-        private System.Windows.Forms.Label lblStatusTextBms;
-        private System.Windows.Forms.Label lblServerAddress;
+        public System.Windows.Forms.Label lblStatusIndicatorBms;
+        public System.Windows.Forms.Label lblStatusTextBms;
+        public System.Windows.Forms.Label lblServerAddress;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel3;
-        private System.Windows.Forms.Button btnStartStop;
+        public System.Windows.Forms.Button btnStartStop;
         private System.Windows.Forms.Button btnSettings;
         private System.Windows.Forms.Button btnQRCode;
         private System.Windows.Forms.TabControl tabControlMain;
         private System.Windows.Forms.TabPage tabKneeboards;
         private System.Windows.Forms.TabPage tabLogs;
-        private System.Windows.Forms.TextBox txtLogs;
+        public System.Windows.Forms.TextBox txtLogs;
         private System.Windows.Forms.NotifyIcon notifyIcon;
         private System.Windows.Forms.ContextMenuStrip cmsTrayMenu;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;

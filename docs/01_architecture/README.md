@@ -22,10 +22,11 @@ A lightweight native Windows application that serves as the user's control cente
 *   **Configuration Hub:** The future entry point for all user-facing settings.
 
 **Key Implementation Details:**
-*   It does not contain any core business logic.
-*   It interacts with the server as a "black box" through two mechanisms:
-    1.  **Health API Polling:** A timer periodically queries the server's `/api/health` endpoint. This is the **single source of truth** for the UI.
-    2.  **Process Management:** It launches the server as a **fully independent process** and manages its lifecycle via a **PID file**.
+*   The code is structured according to the **Single Responsibility Principle**. The `Form1` class acts as a coordinator, delegating tasks to specialized classes: `ServerManager` (process control), `HealthMonitor` (API polling), and `UIController` (UI updates).
+*   It interacts with the server as a "black box" through three primary mechanisms:
+    1.  **Health API Polling:** A `HealthMonitor` class periodically queries the server's `/api/health` endpoint. This is the **single source of truth** for the UI.
+    2.  **PID File Management:** A `ServerManager` class launches the server as a fully independent process, saves its Process ID (PID) to a `server.pid` file, and uses this PID for precise and reliable termination.
+    3.  **Log File Monitoring:** The `ServerManager` uses a `FileSystemWatcher` to monitor the server's log file in real-time and display its contents in the UI, removing the need for direct process stream redirection.
 
 ### 2. Python FastAPI Server (`Server_Core`)
 
