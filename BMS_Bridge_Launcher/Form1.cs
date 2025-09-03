@@ -140,12 +140,24 @@ namespace BMS_Bridge_Launcher
         {
             uiController.ShowInfo("Settings window will be implemented here.", "Coming Soon");
         }
-        
+
         private void btnQRCode_Click(object sender, EventArgs e)
         {
-            uiController.ShowInfo("QR code generator will be implemented here.", "Coming Soon");
+            string serverAddress = healthMonitor.LastKnownState?.server_address;
+
+            if (serverManager.IsRunning && !string.IsNullOrEmpty(serverAddress))
+            {
+                using (var qrForm = new QrCodeForm(serverAddress))
+                {
+                    qrForm.ShowDialog(this);
+                }
+            }
+            else
+            {
+                uiController.ShowInfo("Start the server first to get its address and generate a QR code.", "Server Not Running");
+            }
         }
-        
-        #endregion       
+
+        #endregion
     }
 }

@@ -17,7 +17,6 @@ namespace BMS_Bridge_Launcher
         {
             if (disposing)
             {
-                // Сначала освобождаем наши новые ресурсы
                 if (serverManager != null)
                 {
                     serverManager.Dispose();
@@ -27,7 +26,6 @@ namespace BMS_Bridge_Launcher
                     healthMonitor.Dispose();
                 }
 
-                // Затем освобождаем ресурсы дизайнера, если они есть
                 if (components != null)
                 {
                     components.Dispose();
@@ -132,7 +130,7 @@ namespace BMS_Bridge_Launcher
             this.flowLayoutPanel1.Controls.Add(this.lblStatusTextServer);
             this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 12);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(138, 20);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(113, 20);
             this.flowLayoutPanel1.TabIndex = 0;
             this.flowLayoutPanel1.WrapContents = false;
             // 
@@ -153,7 +151,7 @@ namespace BMS_Bridge_Launcher
             this.lblStatusTextServer.Location = new System.Drawing.Point(30, 6);
             this.lblStatusTextServer.Margin = new System.Windows.Forms.Padding(5, 5, 0, 0);
             this.lblStatusTextServer.Name = "lblStatusTextServer";
-            this.lblStatusTextServer.Size = new System.Drawing.Size(84, 13);
+            this.lblStatusTextServer.Size = new System.Drawing.Size(83, 13);
             this.lblStatusTextServer.TabIndex = 1;
             this.lblStatusTextServer.Text = "Status: Stopped";
             // 
@@ -163,7 +161,7 @@ namespace BMS_Bridge_Launcher
             this.flowLayoutPanel2.AutoSize = true;
             this.flowLayoutPanel2.Controls.Add(this.lblStatusIndicatorBms);
             this.flowLayoutPanel2.Controls.Add(this.lblStatusTextBms);
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(147, 16);
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(122, 16);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
             this.flowLayoutPanel2.Size = new System.Drawing.Size(67, 13);
             this.flowLayoutPanel2.TabIndex = 1;
@@ -192,7 +190,7 @@ namespace BMS_Bridge_Launcher
             // 
             this.lblServerAddress.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.lblServerAddress.AutoSize = true;
-            this.lblServerAddress.Location = new System.Drawing.Point(220, 16);
+            this.lblServerAddress.Location = new System.Drawing.Point(195, 16);
             this.lblServerAddress.Name = "lblServerAddress";
             this.lblServerAddress.Size = new System.Drawing.Size(54, 13);
             this.lblServerAddress.TabIndex = 2;
@@ -243,6 +241,7 @@ namespace BMS_Bridge_Launcher
             this.btnQRCode.TabIndex = 2;
             this.btnQRCode.Text = "🌐";
             this.btnQRCode.UseVisualStyleBackColor = true;
+            this.btnQRCode.Click += new System.EventHandler(this.btnQRCode_Click);
             // 
             // tabControlMain
             // 
@@ -300,19 +299,19 @@ namespace BMS_Bridge_Launcher
             this.toolStripMenuItem1,
             this.toolStripMenuItem2});
             this.cmsTrayMenu.Name = "cmsTrayMenu";
-            this.cmsTrayMenu.Size = new System.Drawing.Size(181, 70);
+            this.cmsTrayMenu.Size = new System.Drawing.Size(140, 48);
             this.cmsTrayMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CmsTrayMenu_ItemClicked);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(139, 22);
             this.toolStripMenuItem1.Text = "Show / Hide";
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(139, 22);
             this.toolStripMenuItem2.Text = "Exit";
             // 
             // Form1
