@@ -9,9 +9,10 @@ namespace BMS_Bridge_Launcher
     {
         private Process serverProcess;
         private readonly string serverExecutablePath;
-        private readonly string serverWorkingDirectory;
+        public readonly string serverWorkingDirectory;
 
         private readonly string pidFilePath;
+        public readonly string SettingsFilePath;
         private FileSystemWatcher logWatcher;
         private long lastLogFileSize = 0;
 
@@ -27,6 +28,7 @@ namespace BMS_Bridge_Launcher
             serverWorkingDirectory = Path.Combine(launcherPath, "Server");
             serverExecutablePath = Path.Combine(serverWorkingDirectory, "BMS_Bridge_Server.exe");
             pidFilePath = Path.Combine(serverWorkingDirectory, "server.pid");
+            SettingsFilePath = Path.Combine(serverWorkingDirectory, "config", "settings.json");
         }
 
         public void Start()

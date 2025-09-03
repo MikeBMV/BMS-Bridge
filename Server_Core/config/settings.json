@@ -12,5 +12,26 @@
   "max_websocket_connections": 10,
   "circuit_breaker_failure_threshold": 5,
   "circuit_breaker_reset_timeout": 60,
-  "file_cache_ttl_seconds": 300
+  "file_cache_ttl_seconds": 300,
+  "kneeboards": {
+    "left": [
+      {
+        "path": "MyLeftMap.png",
+        "enabled": true,
+        "type": "user_file"
+      },
+      {
+        "path": "AnotherFile.pdf",
+        "enabled": false,
+        "type": "user_file"
+      }
+    ],
+    "right": [
+      {
+        "path": "Checklist.png",
+        "enabled": true,
+        "type": "user_file"
+      }
+    ]
+  }
 }
