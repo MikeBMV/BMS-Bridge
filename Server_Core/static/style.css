@@ -533,6 +533,15 @@ body {
     width: 100%;
 }
 
+/* ==========================================================================
+   7. UTILITY CLASSES
+   ========================================================================== */
+
+/* A simple utility class to hide elements completely */
+.hidden {
+    display: none !important;
+}
+
 .steerpoints-table th:nth-of-type(1), .steerpoints-table td:nth-of-type(1) { width: 4%; }  /* # */
 .steerpoints-table th:nth-of-type(2), .steerpoints-table td:nth-of-type(2) { width: 12%; } /* Desc */
 .steerpoints-table th:nth-of-type(3), .steerpoints-table td:nth-of-type(3) { width: 10%; } /* Time */

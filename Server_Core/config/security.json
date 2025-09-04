@@ -5,6 +5,7 @@
     "images",
     "procedure",
     "Left",
-    "Right"
+    "Right",
+    "user_data"
   ]
 }

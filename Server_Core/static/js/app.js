@@ -1,7 +1,7 @@
 // File: static/js/app.js
 /**
  * BMS Bridge Application - Final Refactored Version
- * Includes all professional enhancements and restored wheel/swipe navigation.
+ * Includes Kneeboards V2 with PDF support and config loading.
  */
 class BMSBridgeApp {
     constructor() {
@@ -10,7 +10,8 @@ class BMSBridgeApp {
         this.config = {
             retryDelay: 1000,
             websocketReconnectDelay: 5000,
-            healthCheckInterval: 15000
+            healthCheckInterval: 15000,
+            pdfRenderScale: 2.0 // Higher scale for better quality on high-res screens
         };
         this.init();
     }
@@ -39,30 +40,25 @@ class BMSBridgeApp {
             isConnected: false,
             healthCheckTimer: null,
             isLoading: false,
-            websocketReconnectTimer: null
+            websocketReconnectTimer: null,
+            pdfLibrary: null // To store the loaded pdf.js library
         };
     }
 
-    _loadStateFromStorage() {
+    async _loadPdfLibrary() {
+        if (this.state.pdfLibrary) return;
         try {
-            const savedState = localStorage.getItem('bmsBridgeState');
-            const defaults = { Left: 1, procedure: 1, Right: 1, briefing: 1 };
-            return savedState ? { ...defaults, ...JSON.parse(savedState) } : defaults;
+            this.state.pdfLibrary = await import('/libs/pdfjs/build/pdf.mjs');
+            this.state.pdfLibrary.GlobalWorkerOptions.workerSrc = '/libs/pdfjs/build/pdf.worker.mjs';
+            console.log("pdf.js library loaded successfully.");
         } catch (e) {
-            console.warn("Could not load state from localStorage.", e);
-            return { Left: 1, procedure: 1, Right: 1, briefing: 1 };
-        }
-    }
-
-    _saveStateToStorage() {
-        try {
-            localStorage.setItem('bmsBridgeState', JSON.stringify(this.state.lastViewedPages));
-        } catch (e) {
-            console.warn("Could not save state to localStorage.", e);
+            console.error("Fatal: Could not load pdf.js library.", e);
+            this.showError("Failed to load core PDF components. Please refresh.", 0);
         }
     }
 
     init() {
+        this._loadPdfLibrary();
         this._startHealthCheck();
         this._setupTabNavigation();
         const firstTab = document.querySelector('.tab-button');
@@ -105,8 +101,6 @@ class BMSBridgeApp {
             const response = await fetch('/api/health', { cache: 'no-cache' });
             if (!response.ok) throw new Error(`Status: ${response.status}`);
             const health = await response.json();
-            // LOGIC FIX: The API now returns a detailed status object.
-            // We check if the BMS status is "CONNECTED".
             this.updateConnectionStatus(health.bms_status === "CONNECTED");
         } catch (error) {
             console.warn('Health check failed:', error);
@@ -117,17 +111,35 @@ class BMSBridgeApp {
     updateConnectionStatus(connected) {
         if (this.state.isConnected === connected) return;
         this.state.isConnected = connected;
-        if (connected) {
-            this.elements.connectionIndicator.className = 'status-indicator connected';
-            this.elements.connectionText.textContent = 'BMS Connected';
-        } else {
-            this.elements.connectionIndicator.className = 'status-indicator disconnected';
-            this.elements.connectionText.textContent = 'BMS Disconnected';
+        this.elements.connectionIndicator.className = connected ? 'status-indicator connected' : 'status-indicator disconnected';
+        this.elements.connectionText.textContent = connected ? 'BMS Connected' : 'BMS Disconnected';
+    }
+
+    _loadStateFromStorage() {
+        try {
+            const savedState = localStorage.getItem('bmsBridgeState');
+            // Устанавливаем значения по умолчанию для каждой вкладки
+            const defaults = { 'left-kneeboard': 0, 'right-kneeboard': 0, 'procedure': 1 };
+            return savedState ? { ...defaults, ...JSON.parse(savedState) } : defaults;
+        } catch (e) {
+            console.warn("Could not load state from localStorage.", e);
+            return { 'left-kneeboard': 0, 'right-kneeboard': 0, 'procedure': 1 };
+        }
+    }
+
+    _saveStateToStorage() {
+        try {
+            localStorage.setItem('bmsBridgeState', JSON.stringify(this.state.lastViewedPages));
+        } catch (e) {
+            console.warn("Could not save state to localStorage.", e);
         }
     }
 
     showLoading(message = 'Loading...') {
-        if (this.state.isLoading) return;
+        if (this.state.isLoading) {
+            this.elements.loadingMessage.textContent = message;
+            return;
+        }
         this.state.isLoading = true;
         this.elements.loadingMessage.textContent = message;
         this.elements.loadingOverlay.classList.remove('hidden');
@@ -157,54 +169,152 @@ class BMSBridgeApp {
     }
 
     cleanupCurrentView() {
-        this._closeWebSocket();
         if (this.state.currentKeyHandler) {
             document.removeEventListener('keydown', this.state.currentKeyHandler);
             this.state.currentKeyHandler = null;
         }
     }
-
+    
+    // --- NEW: Universal Kneeboard Loader ---
     async loadKneeboard(boardName, element) {
         this.cleanupCurrentView();
         this.setActiveTab(element);
-        this.showLoading(`Updating ${boardName} kneeboard...`);
+        this.showLoading(`Loading ${boardName} kneeboard...`);
         try {
-            await fetch('/api/kneeboards/refresh', { method: 'POST' });
-            this.showLoading(`Loading ${boardName} images...`);
-            const response = await fetch(`/api/kneeboard_images/${boardName}`);
+            const response = await fetch(`/api/kneeboards/${boardName.toLowerCase()}`);
+            if (!response.ok) throw new Error(`Server returned status ${response.status}`);
             const result = await response.json();
-            if (!result.success || result.images.length === 0) {
-                this.elements.contentContainer.innerHTML = `<div class="empty-content"><h2>No ${boardName} Images Found</h2></div>`;
+
+            if (!result.success || result.items.length === 0) {
+                this.elements.contentContainer.innerHTML = `<div class="empty-content"><h2>No ${boardName} Kneeboard Pages</h2><p>Add and enable files in the launcher.</p></div>`;
                 return;
             }
-            this._setupImageViewer(boardName, result.images);
+            await this._setupConfigurableViewer(boardName, result.items);
         } catch (error) {
             this.showError(`Failed to load kneeboard: ${error.message}`);
+            this.elements.contentContainer.innerHTML = `<div class="empty-content"><h2>Error loading kneeboard</h2><p>${error.message}</p></div>`;
         } finally {
             this.hideLoading();
         }
     }
 
-    loadUnderConstruction(pageTitle, element) {
-        this.cleanupCurrentView();
-        this.setActiveTab(element);
-        this.elements.contentContainer.innerHTML = `
-            <div class="empty-content">
-                <h1 style="font-size: 3rem; margin-bottom: 1rem;">🚧</h1>
-                <h2>${pageTitle} - Under Construction</h2>
-                <p style="margin-top: 0.5rem; color: var(--text-secondary);">This feature is coming soon!</p>
-            </div>`;
-    }
+    // --- NEW: Powerful viewer for images and PDFs ---
+    // --- NEW: Powerful viewer for images and PDFs ---
+    async _setupConfigurableViewer(name, items) {
+        this.showLoading('Preparing kneeboard pages...');
 
+        // 1. Создаем "чистый" HTML с пустым контейнером для контента
+        this.elements.contentContainer.innerHTML = `
+            <div class="image-viewer">
+                <div class="viewer-controls">
+                    <button id="prev-btn" class="control-btn">&lt; Prev</button>
+                    <span id="page-display" class="page-info"></span>
+                    <button id="next-btn" class="control-btn">Next &gt;</button>
+                </div>
+                <div class="viewer-content" id="viewer-content-area">
+                    <!-- This area will be dynamically populated -->
+                </div>
+            </div>`;
+
+        // 2. Получаем ссылки на элементы управления ОДИН РАЗ
+        const viewerContent = document.getElementById('viewer-content-area');
+        const pageDisplay = document.getElementById('page-display');
+        const pdfjsLib = this.state.pdfLibrary;
+        if (!pdfjsLib) {
+            this.showError("PDF library is not ready. Please wait or refresh.", 5000);
+            return;
+        }
+
+        const pageList = [];
+        const pdfDocsCache = {};
+
+        // 3. Формируем плоский список страниц (без изменений)
+        for (const [index, item] of items.entries()) {
+            this.showLoading(`Processing file ${index + 1} / ${items.length}...`);
+            if (item.type === 'image') {
+                pageList.push({ type: 'image', path: item.path });
+            } else if (item.type === 'pdf') {
+                try {
+                    if (!pdfDocsCache[item.path]) {
+                        pdfDocsCache[item.path] = await pdfjsLib.getDocument(item.path).promise;
+                    }
+                    const pdfDoc = pdfDocsCache[item.path];
+                    for (let i = 1; i <= pdfDoc.numPages; i++) {
+                        pageList.push({ type: 'pdf', pageNum: i, doc: pdfDoc });
+                    }
+                } catch (e) {
+                    console.error(`Failed to load PDF ${item.path}`, e);
+                }
+            }
+        }
+
+        if (pageList.length === 0) {
+            this.elements.contentContainer.innerHTML = `<div class="empty-content"><h2>No valid pages found.</h2><p>Check if the configured files exist.</p></div>`;
+            this.hideLoading();
+            return;
+        }
+        
+        // 4. Логика рендеринга по принципу "Чистой комнаты"
+        let currentPageIndex = this.state.lastViewedPages[name.toLowerCase()] || 0;
+        if (currentPageIndex >= pageList.length) {
+            currentPageIndex = 0;
+        }
+
+        const renderPage = async (index) => {
+            const page = pageList[index];
+            this.showLoading('Rendering page...');
+            viewerContent.innerHTML = ''; // Очищаем контейнер
+
+            if (page.type === 'image') {
+                const img = document.createElement('img');
+                img.id = 'current-image';
+                img.src = page.path;
+                viewerContent.appendChild(img);
+            } else if (page.type === 'pdf') {
+                const canvas = document.createElement('canvas');
+                canvas.id = 'pdf-canvas';
+                viewerContent.appendChild(canvas);
+                const pdfPage = await page.doc.getPage(page.pageNum);
+                const viewport = pdfPage.getViewport({ scale: this.config.pdfRenderScale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                await pdfPage.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            }
+            
+            pageDisplay.textContent = `${index + 1} / ${pageList.length}`;
+            currentPageIndex = index;
+            this.state.lastViewedPages[name.toLowerCase()] = currentPageIndex;
+            this._saveStateToStorage();
+            this.hideLoading();
+        };
+
+        // 5. Привязываем события (без изменений)
+        const prev = () => { if (currentPageIndex > 0) renderPage(currentPageIndex - 1); };
+        const next = () => { if (currentPageIndex < pageList.length - 1) renderPage(currentPageIndex + 1); };
+        document.getElementById('prev-btn').onclick = prev;
+        document.getElementById('next-btn').onclick = next;
+        this.state.currentKeyHandler = e => { if (e.key === 'ArrowLeft') prev(); if (e.key === 'ArrowRight') next(); };
+        document.addEventListener('keydown', this.state.currentKeyHandler);
+        
+        // Передаем правильный viewerContent в обработчик свайпов
+        this._setupViewerInteractions(viewerContent, next, prev);
+
+        renderPage(currentPageIndex);
+    }
+        
+    // Kept for the "Docs" tab
     async loadPdf(pageName, element) {
         this.cleanupCurrentView();
         this.setActiveTab(element);
         this.showLoading('Loading PDF...');
         try {
-            const pdfjsLib = await import('/libs/pdfjs/build/pdf.mjs');
-            pdfjsLib.GlobalWorkerOptions.workerSrc = '/libs/pdfjs/build/pdf.worker.mjs';
+            const pdfjsLib = this.state.pdfLibrary;
+            if (!pdfjsLib) {
+                this.showError("PDF library is not ready. Please wait or refresh.", 5000);
+                return;
+            }
             const pdfDoc = await pdfjsLib.getDocument(`/${pageName}/sample_procedure.pdf`).promise;
-            this._setupPdfViewer(pdfDoc, pageName);
+            this._setupPdfViewer(pdfDoc);
         } catch (error) {
             this.showError(`Failed to load PDF: ${error.message}`);
         } finally {
@@ -212,91 +322,21 @@ class BMSBridgeApp {
         }
     }
     
-    _setupImageViewer(name, images) {
-        let pageNum = this.state.lastViewedPages[name] || 1;
-        if (pageNum > images.length) pageNum = 1;
-        this.elements.contentContainer.innerHTML = `<div class="image-viewer"><div class="viewer-controls"><button id="prev-btn" class="control-btn">&lt; Prev</button><span id="page-display" class="page-info"></span><button id="next-btn" class="control-btn">Next &gt;</button></div><div class="viewer-content"><img id="current-image" alt="Kneeboard image"/></div></div>`;
-        const img = document.getElementById('current-image'), pageDisplay = document.getElementById('page-display');
-        
-        const update = () => {
-            img.src = `/${name}/${images[pageNum - 1]}`;
-            pageDisplay.textContent = `${pageNum} / ${images.length}`;
-            this.state.lastViewedPages[name] = pageNum;
-            this._saveStateToStorage();
-        };
-        const prev = () => { if (pageNum > 1) { pageNum--; update(); } };
-        const next = () => { if (pageNum < images.length) { pageNum++; update(); } };
-
-        document.getElementById('prev-btn').onclick = prev;
-        document.getElementById('next-btn').onclick = next;
-        this.state.currentKeyHandler = e => { if (e.key === 'ArrowLeft') prev(); if (e.key === 'ArrowRight') next(); };
-        document.addEventListener('keydown', this.state.currentKeyHandler);
-
-        const viewerContent = this.elements.contentContainer.querySelector('.viewer-content');
-        this._setupViewerInteractions(viewerContent, next, prev);
-        
-        update();
-    }
-
-    _setupBriefingViewer(pages) {
-        let pageNum = this.state.lastViewedPages.briefing || 1;
-        if (pageNum > pages.length) pageNum = 1;
-        this.elements.contentContainer.innerHTML = `<div class="briefing-viewer"><div class="viewer-controls"><button id="prev-btn" class="control-btn">&lt; Prev</button><span id="page-display" class="page-info"></span><button id="next-btn" class="control-btn">Next &gt;</button></div><div class="viewer-content" id="briefing-content-wrapper"></div></div>`;
-        const pageDisplay = document.getElementById('page-display'), contentWrapper = document.getElementById('briefing-content-wrapper');
-        
-        const update = () => {
-            const currentPage = pages[pageNum - 1];
-            pageDisplay.textContent = `${pageNum} / ${pages.length} | ${currentPage.title}`;
-            let html = '<div class="briefing-page">';
-            for (const section of currentPage.sections) {
-                html += `<div class="briefing-section"><h3 class="section-title">${section.name}</h3>${this._renderSection(section)}</div>`;
-            }
-            html += '</div>';
-            contentWrapper.innerHTML = html;
-            contentWrapper.scrollTop = 0;
-            this.state.lastViewedPages.briefing = pageNum;
-            this._saveStateToStorage();
-        };
-        const prev = () => { if (pageNum > 1) { pageNum--; update(); } };
-        const next = () => { if (pageNum < pages.length) { pageNum++; update(); } };
-
-        document.getElementById('prev-btn').onclick = prev;
-        document.getElementById('next-btn').onclick = next;
-        this.state.currentKeyHandler = e => { if (e.key === 'ArrowLeft') prev(); if (e.key === 'ArrowRight') next(); };
-        document.addEventListener('keydown', this.state.currentKeyHandler);
-        
-        this._setupViewerInteractions(contentWrapper, next, prev);
-
-        update();
-    }
-
-    _renderSection(section) {
-        switch (section.type) {
-            case 'table':
-                const headers = section.data.headers;
-                const tableClass = section.className ? `bms-table ${section.className}` : 'bms-table';
-                return `<div class="table-container"><table class="${tableClass}"><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${section.data.rows.map(row => `<tr>${headers.map(h => `<td>${row[h] || ''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
-            case 'kv_list': return `<ul class="kv-list">${Object.entries(section.data).map(([key, value]) => `<li><strong>${key}:</strong> <span>${value}</span></li>`).join('')}</ul>`;
-            case 'text': return `<pre class="text-content">${section.data}</pre>`;
-            case 'complex_section': return section.data.map(sub => `<div class="sub-section"><h4 class="sub-section-title">${sub.title}</h4>${this._renderSection(sub)}</div>`).join('');
-            default: return '<p>Unknown content type</p>';
-        }
-    }
-
-    _setupPdfViewer(pdfDoc, pageName) {
+    // Kept for the "Docs" tab
+    _setupPdfViewer(pdfDoc) {
         this.elements.contentContainer.innerHTML = `<div class="pdf-viewer"><div class="viewer-controls"><button id="prev-btn" class="control-btn">&lt; Prev</button><span id="page-display" class="page-info"></span><button id="next-btn" class="control-btn">Next &gt;</button></div><div class="viewer-content"><canvas id="pdf-canvas"></canvas></div></div>`;
-        let pageNum = this.state.lastViewedPages[pageName] || 1;
-        if (pageNum > pdfDoc.numPages) pageNum = 1;
+        let pageNum = this.state.lastViewedPages['procedure'] || 1;
+            if (pageNum > pdfDoc.numPages) pageNum = 1;
         const canvas = document.getElementById('pdf-canvas'), pageDisplay = document.getElementById('page-display');
         
         const render = async () => {
             const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 1.8 });
+            const viewport = page.getViewport({ scale: this.config.pdfRenderScale });
             canvas.height = viewport.height;
             canvas.width = viewport.width;
             await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
             pageDisplay.textContent = `${pageNum} / ${pdfDoc.numPages}`;
-            this.state.lastViewedPages[pageName] = pageNum;
+            this.state.lastViewedPages['procedure'] = pageNum;
             this._saveStateToStorage();
         };
         const prev = () => { if (pageNum > 1) { pageNum--; render(); } };
@@ -330,73 +370,20 @@ class BMSBridgeApp {
             else if (swipeDistance > 50) prevCallback();
         }, { passive: true });
     }
-    
-    _setupWebSocket() {
-        if (this.state.websocket) return;
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//${window.location.host}/ws/flight_data`;
-        this.state.websocket = new WebSocket(wsUrl);
-        
-        this.state.websocket.onopen = () => {
-            this.hideLoading();
-            console.log('WebSocket connected.');
-            if (this.state.websocketReconnectTimer) {
-                clearTimeout(this.state.websocketReconnectTimer);
-                this.state.websocketReconnectTimer = null;
-            }
-        };
-        
-        this.state.websocket.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
-            const grid = document.getElementById('instruments-grid');
-            if (!grid) return;
-            if (msg.success && msg.data) {
-                grid.innerHTML = Object.entries(msg.data)
-                    .filter(([key, value]) => !key.startsWith('_') && (typeof value !== 'string' || value.trim() !== ''))
-                    .map(([key, value]) => `<div class="data-field"><div class="field-name">${key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}</div><div class="field-value">${typeof value === 'number' ? value.toFixed(3) : String(value)}</div></div>`)
-                    .join('');
-            } else {
-                grid.innerHTML = `<div class="empty-content"><h2>${msg.error || "Waiting for data..."}</h2></div>`;
-            }
-        };
-        
-        this.state.websocket.onclose = () => {
-            console.warn('WebSocket disconnected.');
-            this.state.websocket = null;
-            if (this.state.currentTab === 'instruments') this._reconnectWebSocket();
-        };
-        
-        this.state.websocket.onerror = (err) => {
-            console.error('WebSocket error:', err);
-            this.showError("WebSocket connection error.", 3000);
-            this.state.websocket = null;
-            if (this.state.currentTab === 'instruments') this._reconnectWebSocket();
-        };
-    }
-    
-    _reconnectWebSocket() {
-        if (this.state.websocketReconnectTimer) return;
-        this.state.websocketReconnectTimer = setTimeout(() => {
-            if (this.state.currentTab === 'instruments' && !this.state.websocket) {
-                console.log("Attempting to reconnect WebSocket...");
-                this._setupWebSocket();
-            }
-            this.state.websocketReconnectTimer = null;
-        }, this.config.websocketReconnectDelay);
-    }
-    
-    _closeWebSocket() {
-        if (this.state.websocketReconnectTimer) {
-            clearTimeout(this.state.websocketReconnectTimer);
-            this.state.websocketReconnectTimer = null;
-        }
-        if (this.state.websocket) {
-            this.state.websocket.close(1000, "Client initiated disconnect");
-            this.state.websocket = null;
-        }
+
+    loadUnderConstruction(pageTitle, element) {
+        this.cleanupCurrentView();
+        this.setActiveTab(element);
+        this.elements.contentContainer.innerHTML = `
+            <div class="empty-content">
+                <h1 style="font-size: 3rem; margin-bottom: 1rem;">🚧</h1>
+                <h2>${pageTitle} - Under Construction</h2>
+                <p style="margin-top: 0.5rem; color: var(--text-secondary);">This feature is coming soon!</p>
+            </div>`;
     }
 }
-
+//
+// Global app instance
 let app;
 try {
     app = new BMSBridgeApp();

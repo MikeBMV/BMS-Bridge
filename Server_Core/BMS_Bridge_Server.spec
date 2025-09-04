@@ -5,17 +5,18 @@
 
 a = Analysis(
     ['main.py'],
-    # --- KEY CHANGE: Tell PyInstaller to look for modules in the current folder ---
-    # This is crucial for correctly importing our local modules like 'adapters'.
     pathex=['.'],
     binaries=[],
-    # --- Data files to include in the bundle ---
-    # We need to explicitly tell PyInstaller to include non-.py files
-    # that our application depends on.
-    # Format: ('source_path_on_disk', 'destination_folder_in_bundle')
+    # --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+    # Мы добавляем все папки, которые нужны серверу для работы.
+    # Формат: ('исходная_папка', 'папка_назначения_в_сборке')
     datas=[
         ('falcon_memreader.py', '.'),
-        ('config/settings.json', 'config')
+        ('config/settings.json', 'config'),
+        ('templates', 'templates'),
+        ('static', 'static'),
+        ('libs', 'libs'),
+        ('procedure', 'procedure')
     ],
     hiddenimports=[],
     hookspath=[],
@@ -37,7 +38,5 @@ exe = EXE(
     strip=False,
     upx=True,
     runtime_tmpdir=None,
-    # console=True means the executable will open a command window when run.
-    # This is very useful for debugging. To hide it, change to console=False.
     console=True
 )
