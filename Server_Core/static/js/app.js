@@ -84,7 +84,8 @@ class BMSBridgeApp {
                         this.loadUnderConstruction('Charts', button);
                         break;
                     case 'procedure':
-                        this.loadPdf('procedure', button);
+                        const procedureData = [{ path: '/procedure/sample_procedure.pdf', type: 'pdf' }];
+                        this._setupConfigurableViewer('Docs', procedureData);
                         break;
                 }
             });
@@ -199,11 +200,9 @@ class BMSBridgeApp {
     }
 
     // --- NEW: Powerful viewer for images and PDFs ---
-    // --- NEW: Powerful viewer for images and PDFs ---
     async _setupConfigurableViewer(name, items) {
         this.showLoading('Preparing kneeboard pages...');
 
-        // 1. Создаем "чистый" HTML с пустым контейнером для контента
         this.elements.contentContainer.innerHTML = `
             <div class="image-viewer">
                 <div class="viewer-controls">
@@ -211,15 +210,19 @@ class BMSBridgeApp {
                     <span id="page-display" class="page-info"></span>
                     <button id="next-btn" class="control-btn">Next &gt;</button>
                 </div>
+                <div class="slider-container">
+                    <input type="range" min="1" max="100" value="1" id="page-slider">
+                </div>
                 <div class="viewer-content" id="viewer-content-area">
                     <!-- This area will be dynamically populated -->
                 </div>
             </div>`;
 
-        // 2. Получаем ссылки на элементы управления ОДИН РАЗ
         const viewerContent = document.getElementById('viewer-content-area');
         const pageDisplay = document.getElementById('page-display');
+        const pageSlider = document.getElementById('page-slider'); // Получаем ссылку на слайдер
         const pdfjsLib = this.state.pdfLibrary;
+
         if (!pdfjsLib) {
             this.showError("PDF library is not ready. Please wait or refresh.", 5000);
             return;
@@ -228,7 +231,6 @@ class BMSBridgeApp {
         const pageList = [];
         const pdfDocsCache = {};
 
-        // 3. Формируем плоский список страниц (без изменений)
         for (const [index, item] of items.entries()) {
             this.showLoading(`Processing file ${index + 1} / ${items.length}...`);
             if (item.type === 'image') {
@@ -253,9 +255,14 @@ class BMSBridgeApp {
             this.hideLoading();
             return;
         }
-        
-        // 4. Логика рендеринга по принципу "Чистой комнаты"
+
+        pageSlider.max = pageList.length;
+        if (pageList.length <= 1) {
+            document.querySelector('.slider-container').style.display = 'none';
+        }
+
         let currentPageIndex = this.state.lastViewedPages[name.toLowerCase()] || 0;
+        let debounceTimer = null;
         if (currentPageIndex >= pageList.length) {
             currentPageIndex = 0;
         }
@@ -263,7 +270,7 @@ class BMSBridgeApp {
         const renderPage = async (index) => {
             const page = pageList[index];
             this.showLoading('Rendering page...');
-            viewerContent.innerHTML = ''; // Очищаем контейнер
+            viewerContent.innerHTML = ''; 
 
             if (page.type === 'image') {
                 const img = document.createElement('img');
@@ -282,75 +289,36 @@ class BMSBridgeApp {
             }
             
             pageDisplay.textContent = `${index + 1} / ${pageList.length}`;
+            pageSlider.value = index + 1;
             currentPageIndex = index;
             this.state.lastViewedPages[name.toLowerCase()] = currentPageIndex;
             this._saveStateToStorage();
             this.hideLoading();
         };
 
-        // 5. Привязываем события (без изменений)
         const prev = () => { if (currentPageIndex > 0) renderPage(currentPageIndex - 1); };
         const next = () => { if (currentPageIndex < pageList.length - 1) renderPage(currentPageIndex + 1); };
+
+        pageSlider.addEventListener('input', (e) => {
+                const newIndex = parseInt(e.target.value) - 1;
+                
+                pageDisplay.textContent = `${e.target.value} / ${pageList.length}`;
+
+                clearTimeout(debounceTimer);
+
+                debounceTimer = setTimeout(() => {
+                    renderPage(newIndex);
+                }, 100); 
+            });
+
         document.getElementById('prev-btn').onclick = prev;
         document.getElementById('next-btn').onclick = next;
         this.state.currentKeyHandler = e => { if (e.key === 'ArrowLeft') prev(); if (e.key === 'ArrowRight') next(); };
         document.addEventListener('keydown', this.state.currentKeyHandler);
         
-        // Передаем правильный viewerContent в обработчик свайпов
         this._setupViewerInteractions(viewerContent, next, prev);
 
         renderPage(currentPageIndex);
-    }
-        
-    // Kept for the "Docs" tab
-    async loadPdf(pageName, element) {
-        this.cleanupCurrentView();
-        this.setActiveTab(element);
-        this.showLoading('Loading PDF...');
-        try {
-            const pdfjsLib = this.state.pdfLibrary;
-            if (!pdfjsLib) {
-                this.showError("PDF library is not ready. Please wait or refresh.", 5000);
-                return;
-            }
-            const pdfDoc = await pdfjsLib.getDocument(`/${pageName}/sample_procedure.pdf`).promise;
-            this._setupPdfViewer(pdfDoc);
-        } catch (error) {
-            this.showError(`Failed to load PDF: ${error.message}`);
-        } finally {
-            this.hideLoading();
-        }
-    }
-    
-    // Kept for the "Docs" tab
-    _setupPdfViewer(pdfDoc) {
-        this.elements.contentContainer.innerHTML = `<div class="pdf-viewer"><div class="viewer-controls"><button id="prev-btn" class="control-btn">&lt; Prev</button><span id="page-display" class="page-info"></span><button id="next-btn" class="control-btn">Next &gt;</button></div><div class="viewer-content"><canvas id="pdf-canvas"></canvas></div></div>`;
-        let pageNum = this.state.lastViewedPages['procedure'] || 1;
-            if (pageNum > pdfDoc.numPages) pageNum = 1;
-        const canvas = document.getElementById('pdf-canvas'), pageDisplay = document.getElementById('page-display');
-        
-        const render = async () => {
-            const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: this.config.pdfRenderScale });
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-            pageDisplay.textContent = `${pageNum} / ${pdfDoc.numPages}`;
-            this.state.lastViewedPages['procedure'] = pageNum;
-            this._saveStateToStorage();
-        };
-        const prev = () => { if (pageNum > 1) { pageNum--; render(); } };
-        const next = () => { if (pageNum < pdfDoc.numPages) { pageNum++; render(); } };
-        
-        document.getElementById('prev-btn').onclick = prev;
-        document.getElementById('next-btn').onclick = next;
-        this.state.currentKeyHandler = e => { if (e.key === 'ArrowLeft') prev(); if (e.key === 'ArrowRight') next(); };
-        document.addEventListener('keydown', this.state.currentKeyHandler);
-        
-        const viewerContent = this.elements.contentContainer.querySelector('.viewer-content');
-        this._setupViewerInteractions(viewerContent, next, prev);
-        
-        render();
     }
 
     _setupViewerInteractions(element, nextCallback, prevCallback) {
@@ -382,8 +350,8 @@ class BMSBridgeApp {
             </div>`;
     }
 }
-//
-// Global app instance
+
+
 let app;
 try {
     app = new BMSBridgeApp();

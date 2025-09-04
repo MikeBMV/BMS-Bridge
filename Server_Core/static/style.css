@@ -542,6 +542,21 @@ body {
     display: none !important;
 }
 
+/* ==========================================================================
+   8. SLIDER CONTROLS
+   ========================================================================== */
+
+.slider-container {
+    padding: 0 1rem 0.5rem 1rem; /* Отступы по бокам и снизу */
+    background-color: #f8fafc; /* Тот же фон, что и у кнопок */
+    border-bottom: 1px solid var(--border-color);
+}
+
+#page-slider {
+    width: 100%;
+    cursor: pointer;
+}
+
 .steerpoints-table th:nth-of-type(1), .steerpoints-table td:nth-of-type(1) { width: 4%; }  /* # */
 .steerpoints-table th:nth-of-type(2), .steerpoints-table td:nth-of-type(2) { width: 12%; } /* Desc */
 .steerpoints-table th:nth-of-type(3), .steerpoints-table td:nth-of-type(3) { width: 10%; } /* Time */
