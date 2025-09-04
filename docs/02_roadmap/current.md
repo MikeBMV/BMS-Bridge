@@ -4,20 +4,18 @@ This document outlines the high-priority tasks for the immediate development cyc
 
 ### Task 1: Refactor Launcher - Implement `ServerManager`
 
-**Status:** Planned
+**Status:** Done
 **Priority:** High
 
 **Problem:**
-As noted by expert reviews, the `Form1.cs` class is overloaded with responsibilities (UI, process management, API client), violating the Single Responsibility Principle (SRP).
+As noted by expert reviews, the `Form1.cs` class was overloaded with responsibilities (UI, process management, API client), violating the Single Responsibility Principle (SRP).
 
-**Requirements:**
-*   Create a new `ServerManager.cs` class.
-*   Move all non-UI logic into it:
-    *   Starting the server as an independent process.
-    *   Logic for saving and reading the PID file (`server.pid`).
-    *   Logic for stopping the process by PID.
-    *   Logic for monitoring the log file via `FileSystemWatcher`.
-*   `Form1.cs` should only contain UI logic and call simple methods like `serverManager.Start()` and `serverManager.Stop()`.
+**Result:**
+The C# launcher was successfully refactored into a multi-class architecture:
+*   `ServerManager`: Handles the server process lifecycle (start/stop via PID file) and log monitoring.
+*   `HealthMonitor`: Manages all `/api/health` polling.
+*   `UIController`: Centralizes all UI update logic.
+*   `Form1`: Acts as a coordinator, delegating tasks to the other classes. This greatly improved code readability and maintainability.
 
 ---
 
@@ -49,13 +47,13 @@ If the launcher crashes while the server remains running, a restarted launcher i
 
 ### Task 4: Externalize All Hardcoded Configuration
 
-**Status:** Planned
+**Status:** In Progress
 **Priority:** Critical (Blocker for new features)
 
 **Problem:**
 Key parameters (BMS version, DDS numbers, ports) are scattered throughout the code.
 
 **Requirements:**
-*   **Python Server:** Move all "magic numbers" to `Server_Core/config/settings.json`.
-*   **Python Server:** Implement the ability to override settings from `settings.json` via command-line arguments (`argparse`), allowing the server to function as a true standalone console app.
-*   **C# Launcher:** Externalize the server URL to a configuration file.
+*   **Python Server:** Move all "magic numbers" to `Server_Core/config/settings.json`. **(Done)**
+*   **Python Server:** Implement the ability to override settings from `settings.json` via command-line arguments (`argparse`), allowing the server to function as a true standalone console app. **(Partially Done - `--hide-console` is implemented)**
+*   **C# Launcher:** Externalize the server URL to a configuration file. **(To Do)**

@@ -89,3 +89,19 @@ The `ServerManager` will launch the server as an independent process and immedia
 *   **Precision:** Terminating by PID is an exact operation that eliminates the risk of killing an unrelated process that happens to have the same name, which was the main critique of the `taskkill /IM` method.
 *   **Robustness:** This approach combines the resilience of running an independent server process with the precise control of direct process management.
 *   **State Management:** The `server.pid` file acts as a simple but effective state mechanism, allowing the launcher (or other tools) to know the PID of the running server instance.
+
+---
+
+### ADR-006: Refactoring the Web UI to a Single Universal Viewer
+
+**Context:**
+The initial implementation of the web front-end used different technologies for different content types. Images were displayed using the standard `<img>` HTML tag, while PDF documents were rendered onto a `<canvas>` element using the `pdf.js` library. During testing, this led to unpredictable rendering bugs, especially when a user would navigate between pages of different types (e.g., from a PDF to an image). The two elements (`<img>` and `<canvas>`) appeared to conflict when being rapidly hidden and shown within the same container.
+
+**Decision:**
+The web UI was refactored to use a **single, universal `<canvas>`-based viewer** for all content types.
+
+**Rationale:**
+*   **Elimination of Rendering Conflicts:** By using only one rendering technology (`<canvas>`), we completely eliminate the race conditions and conflicts between competing browser rendering pipelines for `<img>` and `<canvas>`.
+*   **Code Simplification:** Instead of having complex logic to manage and toggle the visibility of two different HTML elements, the new architecture uses a "clean room" approach. Before rendering any page, the viewer's content area is completely cleared. Then, a single `<canvas>` element is created from scratch to display the content. This dramatically simplifies the rendering logic.
+*   **Unified Feature Development:** This architecture ensures that any future feature (e.g., zoom, rotation) only needs to be implemented once. Since all content is ultimately rendered on a `<canvas>`, the same code will work for both images and PDF pages.
+*   **Consistency:** The user experience becomes more consistent, as all document-based views (Kneeboards, Docs, Charts) now use the exact same viewing component, ensuring identical behavior and controls. The logic for drawing an image onto a canvas is trivial and does not introduce significant performance overhead.

@@ -5,21 +5,29 @@ This document outlines planned features and improvements for future development 
 ## High-Priority Features (Backlog)
 
 ### Kneeboard Management UI
+**Status:** Implemented
+
 **Concept:**
-Allow users to customize their kneeboards by adding their own images and PDF documents.
-**Requirements:**
-*   A UI in the C# launcher with two lists (Left/Right).
-*   Functionality to add/remove/reorder (drag-and-drop) pages.
-*   The launcher will save the configuration to a `kneeboard_manifest.json`.
-*   The Python server will read this manifest and securely serve the user-provided content via a protected API.
+A user-friendly interface inside the C# launcher allows users to fully customize their kneeboards for both the left and right side. Users can add, remove, reorder, and enable/disable any image (`.png`, `.jpg`) or multi-page PDF document.
+
+**Requirements (as implemented):**
+*   A dedicated "Kneeboard Management" tab in the C# launcher.
+*   Two `ListView` controls for the Left and Right kneeboards, displaying the file paths.
+*   Functionality to **Add** new files. The launcher copies the selected file into a centralized `Server/user_data/kneeboards/` directory to ensure stability.
+*   Functionality to **Delete** files from the lists.
+*   Functionality to **Reorder** items (Move Up/Down) and **Transfer** items between the left and right lists.
+*   A checkbox for each item to **Enable/Disable** it without deleting it from the list.
+*   All changes are immediately and automatically saved to the central `Server/config/settings.json` file.
+*   The Python server reads this configuration to display the correct, filtered, and ordered pages in the web UI's universal viewer.
 
 ### Settings Window UI
 **Concept:**
 Create a user-friendly GUI to manage all the settings that have been externalized from the code.
 
 ### QR Code Generator
+**Status:** Implemented
 **Concept:**
-Simplify mobile device connection by displaying a QR code of the server's IP address.
+Simplify mobile device connection by displaying a QR code of the server's IP address. A dedicated button in the launcher opens a window with the generated code.
 
 ## Strategic Goals
 
