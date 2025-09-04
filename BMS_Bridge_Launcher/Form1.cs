@@ -91,14 +91,10 @@ namespace BMS_Bridge_Launcher
 
         private void StopServer()
         {
-            // Stop monitoring first
             healthMonitor.StopMonitoring();
-
-            // Stop server
             serverManager.Stop();
 
-            // Update UI
-            uiController.UpdateServerStatus(new ServerHealthState { server_status = "STOPPED" });
+            healthMonitor.ManuallySetState(new ServerHealthState { server_status = "STOPPED" });
         }
 
         private void OnServerExited(object sender, EventArgs e)
@@ -123,6 +119,17 @@ namespace BMS_Bridge_Launcher
             }
         }
 
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == Program.WM_SHOWME)
+            {
+                this.Show();
+                this.WindowState = FormWindowState.Normal;
+                notifyIcon.Visible = false;
+                this.Activate();
+            }
+            base.WndProc(ref m);
+        }
         private void notifyIcon_DoubleClick(object sender, EventArgs e)
         {
             this.Show();

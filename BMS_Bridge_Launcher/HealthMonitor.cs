@@ -95,7 +95,17 @@ namespace BMS_Bridge_Launcher
         {
             ErrorOccurred?.Invoke(this, error);
         }
-        
+        /// <summary>
+        /// Allows to manually set the health state from the outside.
+        /// This is useful for immediately reflecting a state change (like a manual shutdown)
+        /// without waiting for a poll cycle.
+        /// </summary>
+        public void ManuallySetState(ServerHealthState newState)
+        {
+            LastKnownState = newState;
+            // We also fire the event to ensure the UI updates through the standard pipeline.
+            OnHealthUpdated(newState);
+        }
         public void Dispose()
         {
             StopMonitoring();
