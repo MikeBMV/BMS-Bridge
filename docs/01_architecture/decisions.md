@@ -105,3 +105,39 @@ The web UI was refactored to use a **single, universal `<canvas>`-based viewer**
 *   **Code Simplification:** Instead of having complex logic to manage and toggle the visibility of two different HTML elements, the new architecture uses a "clean room" approach. Before rendering any page, the viewer's content area is completely cleared. Then, a single `<canvas>` element is created from scratch to display the content. This dramatically simplifies the rendering logic.
 *   **Unified Feature Development:** This architecture ensures that any future feature (e.g., zoom, rotation) only needs to be implemented once. Since all content is ultimately rendered on a `<canvas>`, the same code will work for both images and PDF pages.
 *   **Consistency:** The user experience becomes more consistent, as all document-based views (Kneeboards, Docs, Charts) now use the exact same viewing component, ensuring identical behavior and controls. The logic for drawing an image onto a canvas is trivial and does not introduce significant performance overhead.
+
+---
+
+### ADR-006: Centralized Kneeboard Configuration via `settings.json`
+
+**Context:**
+The initial concept for kneeboards involved the Python server automatically detecting and converting `.dds` files from the simulator's installation directory. This approach was brittle, inflexible, and not user-friendly. It did not allow for custom images, PDFs, or reordering.
+
+**Decision:**
+To implement a **user-driven, centralized configuration system** for kneeboards.
+1.  The C# launcher provides a full UI for adding, removing, reordering, and enabling/disabling kneeboard pages.
+2.  The launcher **copies** all user-provided files into a local `Server/user_data/kneeboards/` directory.
+3.  The complete kneeboard configuration (lists of files for left and right kneeboards) is stored directly within the server's main `Server/config/settings.json` file.
+4.  The Python server acts as a **pure consumer** of this configuration, simply reading the file to determine which content to serve.
+
+**Rationale:**
+*   **Robustness:** Storing files within the application's directory prevents issues with users moving or deleting original source files.
+*   **Flexibility:** This model easily supports various file types (images, PDFs) and gives the user full control over content and presentation order.
+*   **Clear Separation of Concerns:** The launcher is the "manager" of the configuration, and the server is the "executor." This aligns perfectly with the project's overall architecture.
+*   **Simplicity:** It removes complex file-watching and conversion logic from the Python server, simplifying its role.
+
+---
+
+### ADR-007: Refactoring the Web UI to a Single Universal Canvas Viewer
+
+**Context:**
+The initial web UI implementation used different HTML elements for different content types: `<img>` for images and `<canvas>` for PDFs. This led to rendering conflicts and race conditions when rapidly switching between pages of different types, resulting in blank or broken content.
+
+**Decision:**
+The web UI was refactored to use a **single, universal `<canvas>` element** for displaying *all* content types.
+
+**Rationale:**
+*   **Elimination of Rendering Conflicts:** By using only one rendering technology, we completely eliminate the browser-level conflicts between the `<img>` and `<canvas>` rendering pipelines.
+*   **Code Simplification (DRY):** Instead of managing multiple viewer functions and UI elements, all logic is centralized in a single `_setupUniversalViewer` function. This function uses a "clean room" approach: it clears the content area and creates a fresh `<canvas>` for each page, ensuring a predictable state.
+*   **Unified Feature Development:** Future features like zoom or rotation only need to be implemented once for the `<canvas>` element and will automatically work for both images and PDFs.
+*   **Consistency:** The user experience is identical across all document-based views (Kneeboards, Docs, etc.), as they all share the exact same underlying component.

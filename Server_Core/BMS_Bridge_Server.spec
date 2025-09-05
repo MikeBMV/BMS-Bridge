@@ -7,12 +7,9 @@ a = Analysis(
     ['main.py'],
     pathex=['.'],
     binaries=[],
-    # --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
-    # Мы добавляем все папки, которые нужны серверу для работы.
-    # Формат: ('исходная_папка', 'папка_назначения_в_сборке')
     datas=[
         ('falcon_memreader.py', '.'),
-        ('config/settings.json', 'config'),
+        ('config', 'config'), # Включаем всю папку config
         ('templates', 'templates'),
         ('static', 'static'),
         ('libs', 'libs'),
@@ -38,5 +35,5 @@ exe = EXE(
     strip=False,
     upx=True,
     runtime_tmpdir=None,
-    console=True
+    console=True 
 )
