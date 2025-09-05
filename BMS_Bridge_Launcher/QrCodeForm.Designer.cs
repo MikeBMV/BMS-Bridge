@@ -27,7 +27,7 @@
             this.picQrCode.Location = new System.Drawing.Point(12, 12);
             this.picQrCode.Name = "picQrCode";
             this.picQrCode.Size = new System.Drawing.Size(300, 300);
-            this.picQrCode.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.picQrCode.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picQrCode.TabIndex = 0;
             this.picQrCode.TabStop = false;
             // 
