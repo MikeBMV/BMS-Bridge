@@ -61,6 +61,7 @@ namespace BMS_Bridge_Launcher
             this.btnMoveDown = new System.Windows.Forms.Button();
             this.tabLogs = new System.Windows.Forms.TabPage();
             this.txtLogs = new System.Windows.Forms.TextBox();
+            this.cmsTrayMenu.SuspendLayout();
             this.tlpMain.SuspendLayout();
             this.pnlHeader.SuspendLayout();
             this.tlpHeader.SuspendLayout();
@@ -74,8 +75,35 @@ namespace BMS_Bridge_Launcher
             this.pnlRightButtons.SuspendLayout();
             this.pnlCenterButtons.SuspendLayout();
             this.tabLogs.SuspendLayout();
-            this.cmsTrayMenu.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // notifyIcon
+            // 
+            this.notifyIcon.ContextMenuStrip = this.cmsTrayMenu;
+            this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
+            this.notifyIcon.Text = "BMS Bridge";
+            this.notifyIcon.DoubleClick += new System.EventHandler(this.notifyIcon_DoubleClick);
+            // 
+            // cmsTrayMenu
+            // 
+            this.cmsTrayMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem1,
+            this.toolStripMenuItem2});
+            this.cmsTrayMenu.Name = "cmsTrayMenu";
+            this.cmsTrayMenu.Size = new System.Drawing.Size(140, 48);
+            this.cmsTrayMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CmsTrayMenu_ItemClicked);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem1.Text = "Show / Hide";
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(139, 22);
+            this.toolStripMenuItem2.Text = "Exit";
             // 
             // tlpMain
             // 
@@ -127,9 +155,9 @@ namespace BMS_Bridge_Launcher
             this.flowLayoutPanel1.AutoSize = true;
             this.flowLayoutPanel1.Controls.Add(this.lblStatusIndicatorServer);
             this.flowLayoutPanel1.Controls.Add(this.lblStatusTextServer);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 9);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 12);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(138, 20);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(114, 20);
             this.flowLayoutPanel1.TabIndex = 0;
             // 
             // lblStatusIndicatorServer
@@ -148,7 +176,7 @@ namespace BMS_Bridge_Launcher
             this.lblStatusTextServer.AutoSize = true;
             this.lblStatusTextServer.Location = new System.Drawing.Point(28, 3);
             this.lblStatusTextServer.Name = "lblStatusTextServer";
-            this.lblStatusTextServer.Size = new System.Drawing.Size(84, 13);
+            this.lblStatusTextServer.Size = new System.Drawing.Size(83, 13);
             this.lblStatusTextServer.TabIndex = 1;
             this.lblStatusTextServer.Text = "Status: Stopped";
             // 
@@ -158,7 +186,7 @@ namespace BMS_Bridge_Launcher
             this.flowLayoutPanel2.AutoSize = true;
             this.flowLayoutPanel2.Controls.Add(this.lblStatusIndicatorBms);
             this.flowLayoutPanel2.Controls.Add(this.lblStatusTextBms);
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(157, 13);
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(133, 16);
             this.flowLayoutPanel2.Margin = new System.Windows.Forms.Padding(13, 3, 3, 3);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
             this.flowLayoutPanel2.Size = new System.Drawing.Size(67, 13);
@@ -187,7 +215,7 @@ namespace BMS_Bridge_Launcher
             // 
             this.lblServerAddress.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblServerAddress.AutoSize = true;
-            this.lblServerAddress.Location = new System.Drawing.Point(240, 13);
+            this.lblServerAddress.Location = new System.Drawing.Point(216, 16);
             this.lblServerAddress.Margin = new System.Windows.Forms.Padding(13, 0, 3, 0);
             this.lblServerAddress.Name = "lblServerAddress";
             this.lblServerAddress.Size = new System.Drawing.Size(54, 13);
@@ -202,10 +230,9 @@ namespace BMS_Bridge_Launcher
             this.flowLayoutPanel3.Controls.Add(this.btnStartStop);
             this.flowLayoutPanel3.Controls.Add(this.btnSettings);
             this.flowLayoutPanel3.Controls.Add(this.btnQRCode);
-            this.flowLayoutPanel3.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.flowLayoutPanel3.Location = new System.Drawing.Point(741, 4);
+            this.flowLayoutPanel3.Location = new System.Drawing.Point(741, 8);
             this.flowLayoutPanel3.Name = "flowLayoutPanel3";
-            this.flowLayoutPanel3.Size = new System.Drawing.Size(174, 30);
+            this.flowLayoutPanel3.Size = new System.Drawing.Size(174, 29);
             this.flowLayoutPanel3.TabIndex = 3;
             // 
             // btnStartStop
@@ -288,9 +315,9 @@ namespace BMS_Bridge_Launcher
             this.lblLeftKneeboard.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.lblLeftKneeboard.AutoSize = true;
             this.lblLeftKneeboard.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblLeftKneeboard.Location = new System.Drawing.Point(171, 6);
+            this.lblLeftKneeboard.Location = new System.Drawing.Point(166, 6);
             this.lblLeftKneeboard.Name = "lblLeftKneeboard";
-            this.lblLeftKneeboard.Size = new System.Drawing.Size(85, 13);
+            this.lblLeftKneeboard.Size = new System.Drawing.Size(94, 13);
             this.lblLeftKneeboard.TabIndex = 0;
             this.lblLeftKneeboard.Text = "Left Kneeboard";
             // 
@@ -301,7 +328,7 @@ namespace BMS_Bridge_Launcher
             this.lblRightKneeboard.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblRightKneeboard.Location = new System.Drawing.Point(649, 6);
             this.lblRightKneeboard.Name = "lblRightKneeboard";
-            this.lblRightKneeboard.Size = new System.Drawing.Size(94, 13);
+            this.lblRightKneeboard.Size = new System.Drawing.Size(102, 13);
             this.lblRightKneeboard.TabIndex = 1;
             this.lblRightKneeboard.Text = "Right Kneeboard";
             // 
@@ -425,7 +452,7 @@ namespace BMS_Bridge_Launcher
             // btnMoveUp
             // 
             this.btnMoveUp.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.btnMoveUp.Location = new System.Drawing.Point(12, 65);
+            this.btnMoveUp.Location = new System.Drawing.Point(12, 66);
             this.btnMoveUp.Name = "btnMoveUp";
             this.btnMoveUp.Size = new System.Drawing.Size(30, 30);
             this.btnMoveUp.TabIndex = 0;
@@ -435,7 +462,7 @@ namespace BMS_Bridge_Launcher
             // btnMoveToRight
             // 
             this.btnMoveToRight.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.btnMoveToRight.Location = new System.Drawing.Point(12, 164);
+            this.btnMoveToRight.Location = new System.Drawing.Point(12, 165);
             this.btnMoveToRight.Name = "btnMoveToRight";
             this.btnMoveToRight.Size = new System.Drawing.Size(30, 30);
             this.btnMoveToRight.TabIndex = 1;
@@ -495,6 +522,7 @@ namespace BMS_Bridge_Launcher
             this.Name = "Form1";
             this.Text = "BMS Bridge Launcher";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.cmsTrayMenu.ResumeLayout(false);
             this.tlpMain.ResumeLayout(false);
             this.pnlHeader.ResumeLayout(false);
             this.tlpHeader.ResumeLayout(false);
@@ -513,36 +541,8 @@ namespace BMS_Bridge_Launcher
             this.pnlCenterButtons.ResumeLayout(false);
             this.tabLogs.ResumeLayout(false);
             this.tabLogs.PerformLayout();
-            // 
-            // notifyIcon
-            // 
-            this.notifyIcon.ContextMenuStrip = this.cmsTrayMenu;
-            this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
-            this.notifyIcon.Text = "BMS Bridge";
-            this.notifyIcon.DoubleClick += new System.EventHandler(this.notifyIcon_DoubleClick);
-            // 
-            // cmsTrayMenu
-            // 
-            this.cmsTrayMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem1,
-            this.toolStripMenuItem2});
-            this.cmsTrayMenu.Name = "cmsTrayMenu";
-            this.cmsTrayMenu.Size = new System.Drawing.Size(139, 48);
-            this.cmsTrayMenu.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.CmsTrayMenu_ItemClicked);
-            // 
-            // toolStripMenuItem1
-            // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(138, 22);
-            this.toolStripMenuItem1.Text = "Show / Hide";
-            // 
-            // toolStripMenuItem2
-            // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(138, 22);
-            this.toolStripMenuItem2.Text = "Exit";
-            this.cmsTrayMenu.ResumeLayout(false);
             this.ResumeLayout(false);
+
         }
 
         #endregion

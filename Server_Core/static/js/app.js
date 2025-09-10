@@ -390,3 +390,16 @@ try {
     console.error("Failed to initialize BMS Bridge App:", error);
     document.body.innerHTML = `<div style="padding: 2rem; text-align: center; font-family: sans-serif;"><h1>Application failed to start</h1><p>${error.message}</p></div>`;
 }
+
+// --- PWA Service Worker Registration ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/js/sw.js')
+            .then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(err => {
+                console.error('ServiceWorker registration failed: ', err);
+            });
+    });
+}
