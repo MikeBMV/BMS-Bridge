@@ -152,6 +152,31 @@ class BMSAdapter:
         self._is_connected = False
         logger.info("BMS Shared Memory connection closed.")
 
+
+    def _read_string_data(self) -> Optional[Dict[str, str]]:
+        if not self.string_data_area or self.string_data_area.closed:
+            return None
+
+        try:
+            self.string_data_area.seek(0)
+            
+            version_num = struct.unpack('I', self.string_data_area.read(4))[0]
+            num_strings = struct.unpack('I', self.string_data_area.read(4))[0]
+            data_size = struct.unpack('I', self.string_data_area.read(4))[0]
+            
+            strings = {}
+            for key in StringData.id:
+                str_id = struct.unpack('I', self.string_data_area.read(4))[0]
+                str_length = struct.unpack('I', self.string_data_area.read(4))[0]
+                str_data = self.string_data_area.read(str_length + 1).decode('utf-8', errors='ignore').rstrip('\x00')
+                strings[key] = str_data
+                
+            return strings
+        except struct.error:
+            logger.warning("Failed to unpack StringData, memory layout might have changed.")
+            self.close()
+            return None
+
     def _get_all_data_internal(self) -> Dict[str, Any]:
         """Internal method that reads the data."""
         if not self._is_connected:
@@ -165,8 +190,11 @@ class BMSAdapter:
             
             dict1 = self.converter.convert_struct_to_dict(flight_data_struct)
             dict2 = self.converter.convert_struct_to_dict(flight_data_2_struct)
-            # We'll omit StringData for now for stability, it can be added later
-            return {**dict1, **dict2} 
+            dict3 = self._read_string_data()
+            if dict3 is None:
+                logger.debug("StringData shared memory area not available or failed to read.")
+                dict3 = {}
+            return {**dict1, **dict2, **dict3} 
         except Exception as e:
             logger.warning(f"Failed to read from Shared Memory, closing connection: {e}")
             self.close()

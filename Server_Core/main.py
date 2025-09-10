@@ -3,6 +3,7 @@ import asyncio
 import logging
 import uvicorn
 import sys
+import glob
 import os
 import multiprocessing
 import time
@@ -19,12 +20,15 @@ import ctypes
 import structlog
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from pydantic import BaseModel
+
+from bs4 import BeautifulSoup
 
 from config.settings import ConfigManager
 from adapters.bms_adapter import BMSAdapter
 from services.briefing_service import BriefingService
+from services.path_service import PathService
 # --------------------------------------------------
 
 # --- 0. Command-line argument parsing for hiding the console ---
@@ -78,6 +82,7 @@ class BMSBridgeApp:
         self.security_config = self.config_manager.get_security_config()
         self.bms_adapter = BMSAdapter(failure_threshold=self.config.circuit_breaker_failure_threshold, reset_timeout=self.config.circuit_breaker_reset_timeout)
         self.briefing_service = BriefingService(self.config_manager)
+        self.path_service = PathService()
         self.websocket_manager = WebSocketManager(self.config.max_websocket_connections)
 
 app_instance: Optional[BMSBridgeApp] = None
@@ -95,8 +100,15 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 
 @app.get("/api/health")
 async def health_check(request: Request, app_inst: BMSBridgeApp = Depends(get_app)):
+    flight_data = app_inst.bms_adapter.get_all_data()
     bms_connected = app_inst.bms_adapter.is_connected()
-    return {"server_status": ServerStatus.RUNNING if bms_connected else ServerStatus.WARNING, "bms_status": BmsStatus.CONNECTED if bms_connected else BmsStatus.NOT_CONNECTED, "server_address": f"http://{get_server_ip()}:{app_inst.config.server_port}", "server_message": "OK" if bms_connected else "BMS Shared Memory not available. Is the simulator in 3D?"}
+    bms_connected = flight_data is not None
+    return {
+        "server_status": ServerStatus.RUNNING if bms_connected else ServerStatus.WARNING,
+        "bms_status": BmsStatus.CONNECTED if bms_connected else BmsStatus.NOT_CONNECTED,
+        "server_address": f"http://{get_server_ip()}:{app_inst.config.server_port}",
+        "server_message": "OK" if bms_connected else "BMS Shared Memory not available. Is the simulator in 3D?"
+    }
 
 @app.get("/api/kneeboards/{board_name}", response_model=KneeboardListResponse)
 async def get_kneeboard_list(board_name: str, app_inst: BMSBridgeApp = Depends(get_app)):
@@ -123,6 +135,42 @@ async def websocket_flight_data(websocket: WebSocket, app_inst: BMSBridgeApp = D
     except WebSocketDisconnect: app_inst.websocket_manager.disconnect(websocket)
     except Exception as e: logger.error(f"WebSocket error: {e}"); app_inst.websocket_manager.disconnect(websocket)
 
+@app.get("/api/briefing/html", response_class=HTMLResponse)
+async def get_html_briefing(app_inst: BMSBridgeApp = Depends(get_app)):
+    try:
+        briefings_dir = app_inst.path_service.find_briefings_dir(app_inst.bms_adapter)
+        if not briefings_dir or not briefings_dir.is_dir():
+            raise HTTPException(status_code=404, detail="BMS Briefings directory not found. Is Falcon BMS installed?")
+        
+        search_pattern = str(briefings_dir / "*.html")
+        html_files = glob.glob(search_pattern)
+
+        if not html_files:
+            logger.warning(f"No HTML briefing files found in: {briefings_dir}")
+            raise HTTPException(status_code=404, detail="No HTML briefing files found.")
+
+        latest_briefing_path = max(html_files, key=os.path.getmtime)
+        logger.info(f"Serving HTML briefing from: {latest_briefing_path}")
+
+        with open(latest_briefing_path, 'r', encoding='utf-8', errors='ignore') as f:
+            soup = BeautifulSoup(f, 'lxml')
+        
+        body_tag = soup.find('body')
+        
+        if not body_tag:
+            logger.error(f"Could not find <body> tag in briefing file: {latest_briefing_path}")
+            raise HTTPException(status_code=500, detail="Could not find <body> tag in briefing file.")
+            
+        body_content = body_tag.decode_contents()
+        
+        return HTMLResponse(content=body_content)
+
+    except HTTPException:
+        raise
+    except Exception:
+        logger.error("An unexpected error occurred in get_html_briefing", exc_info=True)
+        raise HTTPException(status_code=500, detail="An internal server error occurred while processing the briefing.")
+
 @app.get("/{filepath:path}")
 async def serve_static_or_app(filepath: str = "", app_inst: BMSBridgeApp = Depends(get_app)):
     logger.info(f"--- Static File Request Received --- path: {filepath}")
@@ -140,6 +188,7 @@ async def serve_static_or_app(filepath: str = "", app_inst: BMSBridgeApp = Depen
     logger.warning(">>> Fallback: Serving INDEX.HTML")
     return FileResponse(BASE_DIR / "templates" / "index.html")
 
+    
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     config = ConfigManager(BASE_DIR).load_config()

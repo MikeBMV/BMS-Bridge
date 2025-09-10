@@ -78,7 +78,7 @@ class BMSBridgeApp {
                         this.loadKneeboard('Right', button);
                         break;
                     case 'briefing':
-                        this.loadUnderConstruction('Briefing', button);
+                        this.loadHtmlBriefing(button);
                         break;
                     case 'charts':
                         this.loadUnderConstruction('Charts', button);
@@ -119,7 +119,6 @@ class BMSBridgeApp {
     _loadStateFromStorage() {
         try {
             const savedState = localStorage.getItem('bmsBridgeState');
-            // Устанавливаем значения по умолчанию для каждой вкладки
             const defaults = { 'left-kneeboard': 0, 'right-kneeboard': 0, 'procedure': 1 };
             return savedState ? { ...defaults, ...JSON.parse(savedState) } : defaults;
         } catch (e) {
@@ -199,6 +198,38 @@ class BMSBridgeApp {
         }
     }
 
+    async loadHtmlBriefing(element) {
+        this.cleanupCurrentView();
+        this.setActiveTab(element);
+        this.showLoading('Loading Briefing...');
+        
+        try {
+            const response = await fetch('/api/briefing/html');
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Server error: ${response.status} - ${errorText}`);
+            }
+            
+            const briefingBodyHtml = await response.text();
+            
+            this.elements.contentContainer.innerHTML = `
+                <div class="briefing-container">
+                    <div class="briefing-content">
+                        ${briefingBodyHtml}
+                    </div>
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('Failed to load HTML briefing:', error);
+            this.showError(error.message);
+            this.elements.contentContainer.innerHTML = `<div class="empty-content"><h2>Error loading briefing</h2><p>${error.message}</p></div>`;
+        } finally {
+            this.hideLoading();
+        }
+    }
+
     // --- NEW: Powerful viewer for images and PDFs ---
     async _setupConfigurableViewer(name, items) {
         this.showLoading('Preparing kneeboard pages...');
@@ -220,7 +251,7 @@ class BMSBridgeApp {
 
         const viewerContent = document.getElementById('viewer-content-area');
         const pageDisplay = document.getElementById('page-display');
-        const pageSlider = document.getElementById('page-slider'); // Получаем ссылку на слайдер
+        const pageSlider = document.getElementById('page-slider');
         const pdfjsLib = this.state.pdfLibrary;
 
         if (!pdfjsLib) {
