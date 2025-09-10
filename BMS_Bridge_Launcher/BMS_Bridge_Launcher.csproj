@@ -126,6 +126,7 @@ XCOPY /S /Y /I "$(ProjectDir)..\Server_Core\static" "$(TargetDir)Server\static\"
 XCOPY /S /Y /I "$(ProjectDir)..\Server_Core\templates" "$(TargetDir)Server\templates\"
 XCOPY /S /Y /I "$(ProjectDir)..\Server_Core\libs" "$(TargetDir)Server\libs\"
 XCOPY /S /Y /I "$(ProjectDir)..\Server_Core\procedure" "$(TargetDir)Server\procedure\"
+XCOPY /Y "$(ProjectDir)..\Server_Core\log_config.yaml" "$(TargetDir)Server\"
 
 REM Create empty output folders for kneeboards
 IF NOT EXIST "$(TargetDir)Server\Left" MKDIR "$(TargetDir)Server\Left"

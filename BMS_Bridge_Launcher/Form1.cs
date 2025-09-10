@@ -73,6 +73,8 @@ namespace BMS_Bridge_Launcher
         {
             try
             {
+                uiController.ClearLog();
+
                 // Update UI to starting state
                 uiController.UpdateServerStatus(new ServerHealthState { server_status = "STARTING" });
 

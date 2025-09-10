@@ -13,7 +13,7 @@ namespace BMS_Bridge_Launcher
 
         private readonly string pidFilePath;
         public readonly string SettingsFilePath;
-        private FileSystemWatcher logWatcher;
+        private System.Windows.Forms.Timer logPollTimer;
         private long lastLogFileSize = 0;
 
         public event EventHandler<string> OutputReceived;
@@ -39,6 +39,24 @@ namespace BMS_Bridge_Launcher
             if (!File.Exists(serverExecutablePath))
                 throw new FileNotFoundException($"Server executable not found: {serverExecutablePath}");
 
+            string logFilePath = Path.Combine(serverWorkingDirectory, "bms_bridge.log");
+            try
+            {
+                if (File.Exists(logFilePath))
+                {
+                    lastLogFileSize = new FileInfo(logFilePath).Length;
+                }
+                else
+                {
+                    lastLogFileSize = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Could not get initial log file size: " + ex.Message);
+                lastLogFileSize = 0;
+            }
+
             try
             {
                 OnOutputReceived("--- Starting server as an independent process ---");
@@ -58,11 +76,17 @@ namespace BMS_Bridge_Launcher
                     EnableRaisingEvents = true
                 };
 
+
                 if (!serverProcess.Start())
                     throw new InvalidOperationException("Failed to start server process");
 
                 File.WriteAllText(pidFilePath, serverProcess.Id.ToString());
-                InitializeLogWatcher();
+                ReadNewLogEntries(Path.Combine(serverWorkingDirectory, "bms_bridge.log"));
+
+                logPollTimer = new System.Windows.Forms.Timer();
+                logPollTimer.Interval = 250;
+                logPollTimer.Tick += (s, ev) => ReadNewLogEntries(Path.Combine(serverWorkingDirectory, "bms_bridge.log"));
+                logPollTimer.Start();
 
                 OnOutputReceived("Server process started successfully. PID: " + serverProcess.Id);
             }
@@ -76,8 +100,9 @@ namespace BMS_Bridge_Launcher
 
         public void Stop()
         {
-            logWatcher?.Dispose();
-            logWatcher = null;
+            logPollTimer?.Stop();
+            logPollTimer?.Dispose();
+            logPollTimer = null;
 
             OnOutputReceived("--- Stopping server process via PID file ---");
 
@@ -132,23 +157,6 @@ namespace BMS_Bridge_Launcher
             OnOutputReceived("Server process has exited");
             serverProcess = null;
             ServerExited?.Invoke(this, EventArgs.Empty);
-        }
-
-        private void InitializeLogWatcher()
-        {
-            string logFilePath = Path.Combine(serverWorkingDirectory, "bms_bridge.log");
-
-            // Сначала читаем все, что уже есть в логе
-            ReadNewLogEntries(logFilePath);
-
-            logWatcher = new FileSystemWatcher
-            {
-                Path = serverWorkingDirectory,
-                Filter = "bms_bridge.log",
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
-            };
-            logWatcher.Changed += (s, e) => ReadNewLogEntries(e.FullPath);
-            logWatcher.EnableRaisingEvents = true;
         }
 
         private void ReadNewLogEntries(string filePath)

@@ -42,15 +42,7 @@ def hide_console_window_if_requested():
 
 hide_console_window_if_requested()
 
-# --- 1. Configure logging (теперь этот код будет работать) ---
-structlog.configure(
-    processors=[structlog.processors.add_log_level, structlog.processors.TimeStamper(fmt="iso"), structlog.processors.StackInfoRenderer(), structlog.dev.ConsoleRenderer()],
-    logger_factory=structlog.PrintLoggerFactory(),
-)
-logger = structlog.get_logger()
-
-log_file_path = Path(__file__).resolve().parent / "bms_bridge.log"
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', handlers=[logging.FileHandler(log_file_path, mode='w')])
+logger = logging.getLogger(__name__)
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -129,26 +121,32 @@ async def websocket_flight_data(websocket: WebSocket, app_inst: BMSBridgeApp = D
             await websocket.send_json({"success": bool(data), "data": data or None, "error": "No data from BMS" if not data else ""})
             await asyncio.sleep(app_inst.config.websocket_update_interval)
     except WebSocketDisconnect: app_inst.websocket_manager.disconnect(websocket)
-    except Exception as e: logger.error("WebSocket error", error=str(e)); app_inst.websocket_manager.disconnect(websocket)
+    except Exception as e: logger.error(f"WebSocket error: {e}"); app_inst.websocket_manager.disconnect(websocket)
 
 @app.get("/{filepath:path}")
 async def serve_static_or_app(filepath: str = "", app_inst: BMSBridgeApp = Depends(get_app)):
-    logger.info("--- Static File Request Received ---", path=filepath)
+    logger.info(f"--- Static File Request Received --- path: {filepath}")
     if not filepath: logger.info("Filepath empty, serving index.html"); return FileResponse(BASE_DIR / "templates" / "index.html")
     try:
         base_dir = BASE_DIR.resolve(); full_path = (base_dir / filepath).resolve()
-        logger.info("Resolved absolute path", path=str(full_path))
-        if not str(full_path).startswith(str(base_dir)): logger.warning("SECURITY: Path traversal attempt!", req_path=str(full_path)); raise HTTPException(status_code=403)
+        logger.info(f"Resolved absolute path: {full_path}")
+        if not str(full_path).startswith(str(base_dir)): logger.warning(f"SECURITY: Path traversal attempt! Requested path: {full_path}"); raise HTTPException(status_code=403)
         is_allowed = any(str(full_path).startswith(str((base_dir / p).resolve())) for p in app_inst.security_config.allowed_static_paths)
         if is_allowed and full_path.is_file():
-            logger.info(">>> Serving STATIC FILE", path=str(full_path))
+            logger.info(f">>> Serving STATIC FILE: {full_path}")
             return FileResponse(full_path, media_type="application/javascript" if full_path.suffix == ".mjs" else None)
-        logger.warning("Path not allowed or not a file", allowed=is_allowed, is_file=full_path.is_file())
-    except Exception as e: logger.error("Exception in static file serving", exc_info=e)
+        logger.warning(f"Path not allowed or not a file. Allowed: {is_allowed}, Is file: {full_path.is_file()}")
+    except Exception as e: logger.error("Exception in static file serving", exc_info=True)
     logger.warning(">>> Fallback: Serving INDEX.HTML")
     return FileResponse(BASE_DIR / "templates" / "index.html")
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     config = ConfigManager(BASE_DIR).load_config()
-    uvicorn.run(app, host=config.server_host, port=config.server_port, workers=1)
+    uvicorn.run(
+        app,
+        host=config.server_host,
+        port=config.server_port,
+        workers=1,
+        log_config="log_config.yaml"
+    )
