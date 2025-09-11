@@ -26,28 +26,28 @@ namespace BMS_Bridge_Launcher
             switch (state.server_status)
             {
                 case "RUNNING":
-                    form.lblStatusIndicatorServer.ForeColor = Color.Green;
-                    form.lblStatusTextServer.Text = "Status: Running";
+                    form.tslStatusServer.ForeColor = Color.Green;
+                    form.tslStatusServer.Text = "Server: Running";
                     break;
                 case "WARNING":
-                    form.lblStatusIndicatorServer.ForeColor = Color.Orange;
-                    form.lblStatusTextServer.Text = "Status: Warning";
+                    form.tslStatusServer.ForeColor = Color.Orange;
+                    form.tslStatusServer.Text = "Server: Warning";
                     break;
                 case "ERROR":
-                    form.lblStatusIndicatorServer.ForeColor = Color.Red;
-                    form.lblStatusTextServer.Text = "Status: Error";
+                    form.tslStatusServer.ForeColor = Color.Red;
+                    form.tslStatusServer.Text = "Server: Error";
                     break;
                 case "STARTING":
-                    form.lblStatusIndicatorServer.ForeColor = Color.DodgerBlue;
-                    form.lblStatusTextServer.Text = "Status: Starting...";
+                    form.tslStatusServer.ForeColor = Color.DodgerBlue;
+                    form.tslStatusServer.Text = "Server: Starting...";
                     break;
                 case "STOPPED":
                 default:
-                    form.lblStatusIndicatorServer.ForeColor = Color.Gray;
-                    form.lblStatusTextServer.Text = "Status: Stopped";
+                    form.tslStatusServer.ForeColor = SystemColors.ControlText;
+                    form.tslStatusServer.Text = "Server: Stopped";
                     break;
             }
-
+            
             // Update BMS status
             UpdateBmsStatus(state.bms_status);
 
@@ -60,19 +60,16 @@ namespace BMS_Bridge_Launcher
             switch (bmsStatus)
             {
                 case "CONNECTED":
-                    form.lblStatusIndicatorBms.ForeColor = Color.Green;
-                    form.lblStatusIndicatorBms.Text = "●";
-                    form.lblStatusTextBms.Text = "BMS: Connected";
+                    form.tslStatusBms.ForeColor = Color.Green;
+                    form.tslStatusBms.Text = "BMS: Connected";
                     break;
                 case "NOT_CONNECTED":
-                    form.lblStatusIndicatorBms.ForeColor = Color.Gray;
-                    form.lblStatusIndicatorBms.Text = "○";
-                    form.lblStatusTextBms.Text = "BMS: Not Found";
+                    form.tslStatusBms.ForeColor = SystemColors.ControlText;
+                    form.tslStatusBms.Text = "BMS: Not Found";
                     break;
                 default:
-                    form.lblStatusIndicatorBms.ForeColor = Color.Gray;
-                    form.lblStatusIndicatorBms.Text = "○";
-                    form.lblStatusTextBms.Text = "BMS: -";
+                    form.tslStatusBms.ForeColor = SystemColors.GrayText;
+                    form.tslStatusBms.Text = "BMS: -";
                     break;
             }
         }
@@ -81,18 +78,20 @@ namespace BMS_Bridge_Launcher
         {
             if (state.IsRunning())
             {
-                form.btnStartStop.Text = "Stop Server";
+                form.tsbStartStop.Text = "■ Stop";
+                form.tsbStartStop.ForeColor = Color.Red;
 
                 if (!string.IsNullOrEmpty(state.server_address))
                 {
-                    form.lblServerAddress.Text = $"Address: {state.server_address}";
-                    form.lblServerAddress.Visible = true;
+                    form.tslServerAddress.Text = state.server_address;
+                    form.tslServerAddress.Visible = true;
                 }
             }
             else
             {
-                form.btnStartStop.Text = "Start Server";
-                form.lblServerAddress.Visible = false;
+                form.tsbStartStop.Text = "▶ Start";
+                form.tsbStartStop.ForeColor = Color.Green;
+                form.tslServerAddress.Visible = false;
             }
         }
 

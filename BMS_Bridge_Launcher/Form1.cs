@@ -53,6 +53,9 @@ namespace BMS_Bridge_Launcher
             this.btnMoveToRight.Click += new System.EventHandler(this.btnMoveToRight_Click);
             this.lvKneeboardLeft.Enter += new System.EventHandler(this.listView_Enter);
             this.lvKneeboardRight.Enter += new System.EventHandler(this.listView_Enter);
+            this.tsbStartStop.Click += new System.EventHandler(this.btnStartStop_Click);
+            this.tsbSettings.Click += new System.EventHandler(this.btnSettings_Click);
+            this.tsbQRCode.Click += new System.EventHandler(this.btnQRCode_Click);
 
             LoadKneeboardSettings();
         }
